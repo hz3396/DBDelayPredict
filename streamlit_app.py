@@ -12,8 +12,8 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # -----------------------------
 # Page setup
 # -----------------------------
-st.set_page_config(page_title="DB Delay Predictor (Linear Regression)", layout="wide")
-st.title("🚆 DB Delay Predictor (Linear Regression)")
+st.set_page_config(page_title="Deutsche Bahn Delay Predictor", layout="wide")
+st.title("🚆 Deutsche Bahn Delay Predictor")
 st.caption("Intro Data Science app: predict arrival delay (minutes) using a simple linear regression model.")
 
 # -----------------------------
