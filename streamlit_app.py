@@ -17,7 +17,22 @@ st.title("🚆 Deutsche Bahn Delay Predictor")
 st.caption("Intro Data Science app: predict arrival delay (minutes) using a simple linear regression model.")
 
 # -----------------------------
-# Helpers
+# Small UI helper
+# -----------------------------
+def metric_card(label: str, value: str):
+    st.markdown(
+        f"""
+        <div style="padding:14px;border-radius:14px;border:1px solid #e6e6e6;">
+            <div style="font-size:13px;color:#666;">{label}</div>
+            <div style="font-size:22px;font-weight:700;margin-top:6px;">{value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# -----------------------------
+# Data loading & processing
 # -----------------------------
 @st.cache_data
 def load_csv(uploaded_file) -> pd.DataFrame:
@@ -25,9 +40,10 @@ def load_csv(uploaded_file) -> pd.DataFrame:
 
 def build_model_table(raw: pd.DataFrame) -> pd.DataFrame:
     """
-    Intro-friendly feature engineering:
     Target: arrival_delay_m
     Features: departure_delay_m, category, hour (from arrival_plan)
+
+    Minimal, intro-friendly cleaning.
     """
     df = raw.copy()
 
@@ -40,14 +56,14 @@ def build_model_table(raw: pd.DataFrame) -> pd.DataFrame:
     df["arrival_plan"] = pd.to_datetime(df["arrival_plan"], errors="coerce")
     df["hour"] = df["arrival_plan"].dt.hour
 
-    # numeric conversion
+    # Convert to numeric
     for c in ["arrival_delay_m", "departure_delay_m", "category", "hour"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
-    # Keep modeling columns
+    # Keep modeling columns and drop missing
     df = df[["arrival_delay_m", "departure_delay_m", "category", "hour"]].dropna()
 
-    # Clean ranges (keeps visuals/model stable)
+    # Keep reasonable ranges (helps visuals + stability)
     df = df[df["arrival_delay_m"].between(0, 180)]
     df = df[df["departure_delay_m"].between(0, 180)]
     df = df[df["category"].between(1, 7)]
@@ -70,18 +86,8 @@ def train_lr(df: pd.DataFrame, feature_cols, target_col="arrival_delay_m"):
     mae = mean_absolute_error(y_test, pred)
     r2 = r2_score(y_test, pred)
 
-    return model, mae, r2
-
-def metric_card(label: str, value: str):
-    st.markdown(
-        f"""
-        <div style="padding:14px;border-radius:14px;border:1px solid #e6e6e6;">
-            <div style="font-size:13px;color:#666;">{label}</div>
-            <div style="font-size:22px;font-weight:700;margin-top:6px;">{value}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # Return y_test and pred for plotting "Actual vs Predicted"
+    return model, mae, r2, y_test, pred
 
 
 # -----------------------------
@@ -95,10 +101,14 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.subheader("Upload data")
-uploaded = st.sidebar.file_uploader("Upload DBtrainrides CSV (recommended: a small sample)", type=["csv"])
+uploaded = st.sidebar.file_uploader(
+    "Upload DBtrainrides CSV (recommended: a sample under 200MB)",
+    type=["csv"]
+)
 
 st.sidebar.info(
-    "If your original file is very large, create a smaller sample CSV first (e.g., 50k rows) and upload that."
+    "Streamlit Cloud limits uploads to 200MB per file.\n\n"
+    "Use your sampled file (e.g., 50k–200k rows) like db_sample.csv."
 )
 
 if uploaded is None:
@@ -114,13 +124,13 @@ if uploaded is None:
     )
     st.stop()
 
-# Load & process
 raw = load_csv(uploaded)
 
 try:
     df = build_model_table(raw)
 except Exception as e:
     st.error("Could not process the dataset.")
+    st.write("Error details:")
     st.code(str(e))
     st.stop()
 
@@ -131,10 +141,10 @@ feature_cols = ["departure_delay_m", "category", "hour"]
 # Page 1: Introduction
 # -----------------------------
 if page == "01 Introduction":
-    st.subheader("What we are building")
+    st.subheader("What this app does")
     st.write(
         """
-We build a **Linear Regression** model to predict **arrival delay (minutes)**.
+We build a simple **Linear Regression** model to predict **arrival delay (minutes)**.
 
 **Target (y):** `arrival_delay_m`  
 **Features (X):** `departure_delay_m`, `category`, `hour`
@@ -153,16 +163,16 @@ arrival\_delay\_m = \\beta_0 + \\beta_1 \\cdot departure\_delay\_m + \\beta_2 \\
     with c2:
         metric_card("Model rows (cleaned)", f"{len(df):,}")
     with c3:
-        metric_card("Columns", f"{raw.shape[1]}")
+        metric_card("Raw columns", f"{raw.shape[1]}")
     with c4:
         metric_card("Features used", f"{len(feature_cols)}")
 
-    st.subheader("Missing values (in required columns)")
+    st.subheader("Missing values (required columns)")
     required_cols = ["arrival_delay_m", "departure_delay_m", "category", "arrival_plan"]
     miss = raw[required_cols].isna().sum()
     st.dataframe(miss.rename("missing_count"))
 
-    st.subheader("Raw preview")
+    st.subheader("Raw dataset preview")
     st.dataframe(raw.head(25))
 
     st.subheader("Modeling table preview (after cleaning + hour feature)")
@@ -182,7 +192,7 @@ elif page == "02 Data Visualization":
 
     st.subheader("2) Departure delay vs Arrival delay")
     fig = plt.figure()
-    plt.scatter(df["departure_delay_m"], df["arrival_delay_m"], s=6)
+    plt.scatter(df["departure_delay_m"], df["arrival_delay_m"], s=6, alpha=0.4)
     plt.xlabel("departure_delay_m (minutes)")
     plt.ylabel("arrival_delay_m (minutes)")
     st.pyplot(fig)
@@ -204,8 +214,8 @@ elif page == "02 Data Visualization":
     plt.ylabel("mean arrival_delay_m (minutes)")
     st.pyplot(fig)
 
-    st.subheader("5) Correlation Heatmap (recommended)")
-    st.write("This helps justify why linear regression makes sense (look for strong correlations).")
+    st.subheader("5) Correlation Heatmap")
+    st.write("Shows correlations among variables used in the model (plus the target).")
     fig = plt.figure()
     corr = df[["arrival_delay_m", "departure_delay_m", "category", "hour"]].corr()
     sns.heatmap(corr, annot=True, fmt=".2f", square=True)
@@ -217,7 +227,7 @@ elif page == "02 Data Visualization":
 # -----------------------------
 else:
     st.subheader("Train & evaluate Linear Regression")
-    model, mae, r2 = train_lr(df, feature_cols, target_col="arrival_delay_m")
+    model, mae, r2, y_test, pred = train_lr(df, feature_cols, target_col="arrival_delay_m")
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -225,14 +235,43 @@ else:
     with c2:
         metric_card("R²", f"{r2:.3f}")
     with c3:
-        metric_card("Training features", ", ".join(feature_cols))
+        metric_card("Features", ", ".join(feature_cols))
 
     st.subheader("Model coefficients")
     coef_df = pd.DataFrame({"feature": feature_cols, "coefficient": model.coef_})
     st.dataframe(coef_df)
 
+    # ---- Actual vs Predicted plot (like your example) ----
+    st.subheader("Actual vs Predicted")
+
+    max_points = st.slider("Max points to plot (for speed)", 2000, 50000, 20000, step=2000)
+    y_arr = np.array(y_test)
+    p_arr = np.array(pred)
+
+    if len(y_arr) > max_points:
+        rng = np.random.RandomState(42)
+        idx = rng.choice(len(y_arr), size=max_points, replace=False)
+        y_plot = y_arr[idx]
+        p_plot = p_arr[idx]
+    else:
+        y_plot = y_arr
+        p_plot = p_arr
+
+    fig = plt.figure(figsize=(10, 6))
+    plt.scatter(p_plot, y_plot, s=12, alpha=0.35)
+
+    mn = float(min(p_plot.min(), y_plot.min()))
+    mx = float(max(p_plot.max(), y_plot.max()))
+    plt.plot([mn, mx], [mn, mx], linestyle="--", linewidth=3)  # y = x dashed line
+
+    plt.title("Actual vs Predicted")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    st.pyplot(fig)
+
+    # ---- Interactive prediction ----
     st.subheader("Make a prediction")
-    st.write("Enter values below to predict the expected arrival delay.")
+    st.write("Enter feature values to predict arrival delay (minutes).")
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -248,16 +287,14 @@ else:
         "hour": hr
     }])[feature_cols]
 
-    pred = float(model.predict(X_new)[0])
+    pred_one = float(model.predict(X_new)[0])
+    st.markdown(f"### Predicted arrival delay: **{pred_one:.1f} minutes**")
 
-    st.markdown(f"### Predicted arrival delay: **{pred:.1f} minutes**")
-
-    # Simple label (looks good in demo)
-    if pred > 20:
+    if pred_one > 20:
         st.error("⚠ High delay risk")
-    elif pred > 10:
+    elif pred_one > 10:
         st.warning("⚠ Moderate delay risk")
     else:
         st.success("✅ Low delay risk")
 
-    st.caption("Note: This is an intro-level model and does not include advanced feature engineering.")
+    st.caption("Note: This is an intro-level linear regression model with basic features.")
