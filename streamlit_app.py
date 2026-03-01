@@ -3,11 +3,29 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+import requests
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
+DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
+DATA_FILE = "db_sample.csv"
+
+@st.cache_data
+def load_default_data() -> pd.DataFrame:
+    """
+    Download the default dataset once (from GitHub Release), then load it.
+    """
+    if not os.path.exists(DATA_FILE):
+        with st.spinner("Downloading default dataset... (first time only)"):
+            r = requests.get(DATA_URL, timeout=60)
+            r.raise_for_status()
+            with open(DATA_FILE, "wb") as f:
+                f.write(r.content)
+
+    return pd.read_csv(DATA_FILE)
 
 # -----------------------------
 # Page setup
@@ -35,8 +53,6 @@ def metric_card(label: str, value: str):
 # Data loading & processing
 # -----------------------------
 @st.cache_data
-def load_csv(uploaded_file) -> pd.DataFrame:
-    return pd.read_csv(uploaded_file)
 
 def build_model_table(raw: pd.DataFrame) -> pd.DataFrame:
     """
@@ -100,27 +116,17 @@ page = st.sidebar.radio(
     index=0
 )
 
-st.sidebar.subheader("Upload data")
 uploaded = st.sidebar.file_uploader(
-    "Upload DBtrainrides CSV (recommended: a sample under 200MB)",
+    "Upload DBtrainrides CSV (optional)",
     type=["csv"]
 )
 
-st.sidebar.info(
-    "Streamlit Cloud limits uploads to 200MB per file.\n\n"
-    "Use your sampled file (e.g., 50k–200k rows) like db_sample.csv."
-)
-
-if uploaded is None:
-    st.warning("Please upload a CSV file in the sidebar to begin.")
-    st.markdown(
-        """
-**Required columns in the CSV:**
-- `arrival_delay_m`
-- `departure_delay_m`
-- `category`
-- `arrival_plan`
-        """
+if uploaded is not None:
+    raw = load_csv(uploaded)
+    st.sidebar.success("Using uploaded dataset")
+else:
+    raw = load_default_data()
+    st.sidebar.success("Using default dataset (GitHub Release)")
     )
     st.stop()
 
