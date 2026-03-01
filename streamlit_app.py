@@ -127,7 +127,6 @@ if uploaded is not None:
 else:
     raw = load_default_data()
     st.sidebar.success("Using default dataset (GitHub Release)")
-    )
     st.stop()
 
 raw = load_csv(uploaded)
