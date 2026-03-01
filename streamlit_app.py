@@ -10,16 +10,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
-# -----------------------------
-# Page setup
-# -----------------------------
-st.set_page_config(page_title="Deutsche Bahn Delay Predictor", layout="wide")
-st.title("🚆 Deutsche Bahn Delay Predictor")
-st.caption("Intro Data Science app: predict arrival delay (minutes) using a simple linear regression model.")
 
-# -----------------------------
-# Constants
-# -----------------------------
+# =============================
+# CONFIG
+# =============================
+st.set_page_config(page_title="DB Delay Predictor", layout="wide")
+st.title("🚆 Deutsche Bahn Delay Predictor")
+st.caption("Predict arrival delay (minutes) using a simple Linear Regression model.")
+
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
 DATA_FILE = "db_sample.csv"
 
@@ -28,9 +26,9 @@ FEATURE_COLS = ["departure_delay_m", "category", "hour"]
 TARGET_COL = "arrival_delay_m"
 
 
-# -----------------------------
-# UI helpers
-# -----------------------------
+# =============================
+# UI HELPERS
+# =============================
 def metric_card(label: str, value: str):
     st.markdown(
         f"""
@@ -43,51 +41,51 @@ def metric_card(label: str, value: str):
     )
 
 
-# -----------------------------
-# Data functions
-# -----------------------------
+# =============================
+# DATA FUNCTIONS
+# =============================
 @st.cache_data
-def load_csv_from_upload(uploaded_file) -> pd.DataFrame:
-    return pd.read_csv(uploaded_file)
-
-@st.cache_data
-def download_and_load_default() -> pd.DataFrame:
+def download_default_dataset() -> str:
     """
-    Download once (GitHub Release), then load. Cached by Streamlit.
+    Download default CSV from GitHub Release (only if not already present).
+    Returns local file path.
     """
     if not os.path.exists(DATA_FILE):
-        r = requests.get(DATA_URL, timeout=120)
-        r.raise_for_status()
-        with open(DATA_FILE, "wb") as f:
-            f.write(r.content)
-    return pd.read_csv(DATA_FILE)
+        with st.spinner("Downloading default dataset from GitHub Release (first time only)..."):
+            r = requests.get(DATA_URL, timeout=120)
+            r.raise_for_status()
+            with open(DATA_FILE, "wb") as f:
+                f.write(r.content)
+    return DATA_FILE
+
+@st.cache_data
+def load_default_data() -> pd.DataFrame:
+    path = download_default_dataset()
+    return pd.read_csv(path)
 
 def build_model_table(raw: pd.DataFrame) -> pd.DataFrame:
     """
     Minimal feature engineering:
-    - Parse arrival_plan -> hour
-    - Keep numeric columns
-    - Drop missing
-    - Clip to reasonable ranges for stability
+    - arrival_plan -> datetime -> hour
+    - keep numeric columns
+    - drop missing
+    - clip ranges for stability
     """
     df = raw.copy()
 
-    # Check required columns
     missing = [c for c in REQUIRED_COLS if c not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns: {missing}")
 
-    # Parse time and extract hour
     df["arrival_plan"] = pd.to_datetime(df["arrival_plan"], errors="coerce")
     df["hour"] = df["arrival_plan"].dt.hour
 
-    # Convert numeric
     for c in ["arrival_delay_m", "departure_delay_m", "category", "hour"]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
     df = df[["arrival_delay_m", "departure_delay_m", "category", "hour"]].dropna()
 
-    # Reasonable ranges
+    # keep reasonable values (helps visuals + avoids extreme outliers)
     df = df[df["arrival_delay_m"].between(0, 180)]
     df = df[df["departure_delay_m"].between(0, 180)]
     df = df[df["category"].between(1, 7)]
@@ -107,60 +105,57 @@ def train_lr(df: pd.DataFrame):
     model.fit(X_train, y_train)
 
     pred = model.predict(X_test)
+
     mae = mean_absolute_error(y_test, pred)
     r2 = r2_score(y_test, pred)
 
     return model, mae, r2, y_test, pred
 
 
-# -----------------------------
-# Sidebar controls
-# -----------------------------
+# =============================
+# SIDEBAR NAV (NO UPLOAD)
+# =============================
 st.sidebar.header("📌 Controls")
 page = st.sidebar.radio(
     "Select Page",
     ["01 Introduction", "02 Data Visualization", "03 Prediction"],
     index=0
 )
+st.sidebar.success("Using built-in dataset (GitHub Release)")
 
-uploaded = st.sidebar.file_uploader(
-    "Upload DBtrainrides CSV (optional)",
-    type=["csv"]
-)
 
-# Load data: uploaded OR default
+# =============================
+# LOAD DATA (ALWAYS DEFAULT)
+# =============================
 try:
-    if uploaded is not None:
-        raw = load_csv_from_upload(uploaded)
-        st.sidebar.success("Using uploaded dataset")
-    else:
-        raw = download_and_load_default()
-        st.sidebar.success("Using default dataset (GitHub Release)")
+    raw = load_default_data()
 except Exception as e:
-    st.error("Failed to load dataset.")
+    st.error("Failed to download/load the default dataset.")
     st.code(str(e))
     st.stop()
 
-# Build modeling table
 try:
     df = build_model_table(raw)
 except Exception as e:
-    st.error("Failed to process dataset (check required columns and formats).")
+    st.error("Failed to process the dataset (unexpected format or missing columns).")
     st.code(str(e))
     st.stop()
 
 
-# -----------------------------
-# Page 01: Introduction
-# -----------------------------
+# =============================
+# PAGE 01: INTRODUCTION
+# =============================
 if page == "01 Introduction":
-    st.subheader("What we are predicting")
+    st.subheader("Project goal")
     st.write(
         """
-We build a **Linear Regression** model to predict **arrival delay (minutes)**.
+We predict **arrival delay (minutes)** using a **Linear Regression** model.
 
 **Target (y):** `arrival_delay_m`  
-**Features (X):** `departure_delay_m`, `category`, `hour`
+**Features (X):**  
+- `departure_delay_m` (how late the train leaves the station)  
+- `category` (station category 1–7)  
+- `hour` (planned arrival hour extracted from `arrival_plan`)
         """
     )
 
@@ -168,30 +163,29 @@ We build a **Linear Regression** model to predict **arrival delay (minutes)**.
     with c1:
         metric_card("Raw rows", f"{len(raw):,}")
     with c2:
-        metric_card("Model rows (cleaned)", f"{len(df):,}")
+        metric_card("Rows used (cleaned)", f"{len(df):,}")
     with c3:
         metric_card("Raw columns", f"{raw.shape[1]}")
     with c4:
-        metric_card("Features used", f"{len(FEATURE_COLS)}")
+        metric_card("Features", ", ".join(FEATURE_COLS))
 
-    st.subheader("Required columns check")
-    st.write("The app expects these columns to exist in the dataset:")
+    st.subheader("Required columns")
     st.code("\n".join(REQUIRED_COLS))
 
     st.subheader("Missing values (required columns)")
     miss = raw[REQUIRED_COLS].isna().sum()
     st.dataframe(miss.rename("missing_count"))
 
-    st.subheader("Raw dataset preview (first 25 rows)")
+    st.subheader("Raw preview (first 25 rows)")
     st.dataframe(raw.head(25))
 
-    st.subheader("Modeling table preview (first 25 rows)")
+    st.subheader("Modeling preview (first 25 rows)")
     st.dataframe(df.head(25))
 
 
-# -----------------------------
-# Page 02: Data Visualization
-# -----------------------------
+# =============================
+# PAGE 02: VISUALIZATION
+# =============================
 elif page == "02 Data Visualization":
     st.subheader("1) Arrival delay distribution")
     fig = plt.figure()
@@ -231,9 +225,9 @@ elif page == "02 Data Visualization":
     st.pyplot(fig)
 
 
-# -----------------------------
-# Page 03: Prediction
-# -----------------------------
+# =============================
+# PAGE 03: PREDICTION
+# =============================
 else:
     st.subheader("Train & evaluate Linear Regression")
     model, mae, r2, y_test, pred = train_lr(df)
@@ -270,14 +264,14 @@ else:
 
     mn = float(min(p_plot.min(), y_plot.min()))
     mx = float(max(p_plot.max(), y_plot.max()))
-    plt.plot([mn, mx], [mn, mx], linestyle="--", linewidth=3)
+    plt.plot([mn, mx], [mn, mx], linestyle="--", linewidth=3)  # y=x reference
 
     plt.title("Actual vs Predicted")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     st.pyplot(fig)
 
-    st.subheader("Make a prediction")
+    st.subheader("Try a prediction")
     st.write("Enter feature values to predict arrival delay (minutes).")
 
     col1, col2, col3 = st.columns(3)
@@ -303,7 +297,3 @@ else:
         st.warning("⚠ Moderate delay risk")
     else:
         st.success("✅ Low delay risk")
-
-    st.caption("This is an intro-level model with a simple feature set.")
-
-    st.caption("Note: This is an intro-level linear regression model with basic features.")
