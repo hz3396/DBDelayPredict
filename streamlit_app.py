@@ -136,7 +136,7 @@ We use that information to predict how late the train will depart.
     st.dataframe(df.head(20))
 
 # Page 02: Data Visualization
-    elif page == "02 Data Visualization":
+elif page == "02 Data Visualization":
     st.subheader("1) Departure delay distribution")
     fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_m"], bins=50)
