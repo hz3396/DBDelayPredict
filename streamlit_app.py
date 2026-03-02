@@ -79,41 +79,62 @@ page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualizatio
 
 # Page 01: Introduction
 if page == "01 Introduction":
-    st.subheader("Goal")
+    st.header("Project Overview")
     st.write(
         """
-We predict **departure_delay_m** (minutes).
+This project predicts **departure_delay_m** (departure delay in minutes)
+using a Linear Regression model.
 
-**Why it makes sense:** a train arrives first, then departs.  
-After arrival, we already know arrival delay and station/time features.
+A train first arrives at a station and then departs.
+After arrival, we already know operational and time-related information.
+We use that information to predict how late the train will depart.
         """
     )
 
-    st.subheader("Variables used (8 features)")
-    st.write(
-        """
-**Target (y):**
-- departure_delay_m
+    # Variables explanation
+    st.subheader("Variables Used")
 
-**Features (X):**
-- arrival_delay_m
-- planned_dwell_m
-- category
-- hour
-- line
-- day_of_week
-- is_peak
-- arrival_delay_flag
-        """
-    )
+    st.write("**Target (y):**")
+    st.write("- departure_delay_m (minutes)")
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Rows in raw data", f"{len(raw):,}")
-    c2.metric("Rows used (cleaned)", f"{len(df):,}")
-    c3.metric("Number of variables (features)", "8")
+    st.write("**Features (X): 8 variables**")
+    st.write("""
+    - arrival_delay_m  
+    - planned_dwell_m  
+    - category  
+    - hour  
+    - line  
+    - day_of_week  
+    - is_peak  
+    - arrival_delay_flag  
+    """)
 
-    st.subheader("Preview (cleaned table)")
-    st.dataframe(df.head(30))
+    # Dataset info
+    st.subheader("Dataset Information")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total rows (raw)", f"{len(raw):,}")
+    col2.metric("Rows used (cleaned)", f"{len(df):,}")
+    col3.metric("Number of features", "8")
+
+    # Missing values
+    st.subheader("Missing Values (after cleaning)")
+
+    missing = df.isna().sum()
+    st.dataframe(missing)
+
+    # Target statistics
+    st.subheader("Target Variable Summary")
+    st.write("Summary statistics for departure_delay_m:")
+    st.dataframe(df["departure_delay_m"].describe())
+
+    # Raw data sample
+    st.subheader("Raw Dataset Sample (first 20 rows)")
+    st.dataframe(raw.head(20))
+
+    # Modeling dataset sample
+    st.subheader("Modeling Dataset Sample (first 20 rows)")
+    st.dataframe(df.head(20))
 
 # Page 02: Data Visualization
 elif page == "02 Data Visualization":
