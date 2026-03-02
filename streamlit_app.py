@@ -129,7 +129,7 @@ We use that information to predict how late the train will depart.
 
     # Raw data sample
     st.subheader("Raw Dataset Sample (first 20 rows)")
-    st.dataframe(raw.head(20))
+    st.dataframe(raw.head(40))
 
     # Modeling dataset sample
     st.subheader("Modeling Dataset Sample (first 20 rows)")
