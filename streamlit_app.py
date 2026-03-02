@@ -11,18 +11,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
-
-# ----------------------------
 # App setup
-# ----------------------------
-st.set_page_config(page_title="DB Delay Project", layout="wide")
-st.title("🚆 DB Departure Delay Predictor")
-st.write("Intro project: predict **departure_delay_m** with **Linear Regression** (8 variables).")
+st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
+st.title("🚆 Deutsche Bahn Departure Delay Predictor")
+st.write("Intro project: predict **departure_delay_m** with **Linear Regression**.")
 
-
-# ----------------------------
-# Load data (no upload)
-# ----------------------------
+# Load data
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
 DATA_FILE = "db_sample.csv"
 
@@ -34,17 +28,14 @@ if not os.path.exists(DATA_FILE):
 
 raw = pd.read_csv(DATA_FILE)
 
-
-# ----------------------------
 # Build simple features
-# ----------------------------
 # Convert time columns
 raw["arrival_plan"] = pd.to_datetime(raw["arrival_plan"], errors="coerce")
 raw["departure_plan"] = pd.to_datetime(raw["departure_plan"], errors="coerce")
 
 # Time features
 raw["hour"] = raw["arrival_plan"].dt.hour
-raw["day_of_week"] = raw["arrival_plan"].dt.dayofweek  # 0=Mon ... 6=Sun
+raw["day_of_week"] = raw["arrival_plan"].dt.dayofweek
 
 # planned dwell time in minutes
 raw["planned_dwell_m"] = (raw["departure_plan"] - raw["arrival_plan"]).dt.total_seconds() / 60
@@ -82,18 +73,11 @@ df = df[(df["category"] >= 1) & (df["category"] <= 7)]
 df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
 df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
 
-
-# ----------------------------
 # Sidebar navigation
-# ----------------------------
 st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
-st.sidebar.success("Using built-in dataset (GitHub Release)")
 
-
-# ----------------------------
 # Page 01: Introduction
-# ----------------------------
 if page == "01 Introduction":
     st.subheader("Goal")
     st.write(
@@ -131,10 +115,7 @@ After arrival, we already know arrival delay and station/time features.
     st.subheader("Preview (cleaned table)")
     st.dataframe(df.head(30))
 
-
-# ----------------------------
 # Page 02: Data Visualization
-# ----------------------------
 elif page == "02 Data Visualization":
     st.subheader("1) Departure delay distribution")
     fig = plt.figure()
@@ -163,10 +144,7 @@ elif page == "02 Data Visualization":
     sns.heatmap(corr, annot=True, fmt=".2f")
     st.pyplot(fig)
 
-
-# ----------------------------
 # Page 03: Prediction
-# ----------------------------
 else:
     st.subheader("Train Linear Regression model")
 
