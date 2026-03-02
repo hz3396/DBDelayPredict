@@ -67,9 +67,8 @@ df = df[(df["category"] >= 1) & (df["category"] <= 7)]
 df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
 
 # 4) Sidebar navigation
-st.sidebar.header("Controls")
-page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
-st.sidebar.success("Using built-in dataset (GitHub Release)")
+st.sidebar.header("Page Selection")
+page = st.sidebar.radio(["01 Introduction", "02 Data Visualization", "03 Prediction"])
 
 # Page 01: Introduction
 if page == "01 Introduction":
