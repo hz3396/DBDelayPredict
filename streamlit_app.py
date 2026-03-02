@@ -11,50 +11,65 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
-# 1) Basic settings
-st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
-st.title("🚆 Deutsche Bahn Departure Delay Predictor")
-st.write("We predict **departure delay (minutes)** using a simple **Linear Regression** model.")
 
-# 2) Load data 
+# ----------------------------
+# App setup
+# ----------------------------
+st.set_page_config(page_title="DB Delay Project", layout="wide")
+st.title("🚆 DB Departure Delay Predictor")
+st.write("Intro project: predict **departure_delay_m** with **Linear Regression** (8 variables).")
+
+
+# ----------------------------
+# Load data (no upload)
+# ----------------------------
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
 DATA_FILE = "db_sample.csv"
 
-def load_data():
-    # download once
-    if not os.path.exists(DATA_FILE):
-        st.write("Downloading default dataset (first time only)...")
-        r = requests.get(DATA_URL)
-        with open(DATA_FILE, "wb") as f:
-            f.write(r.content)
+if not os.path.exists(DATA_FILE):
+    st.write("Downloading dataset (first time only)...")
+    r = requests.get(DATA_URL)
+    with open(DATA_FILE, "wb") as f:
+        f.write(r.content)
 
-    df = pd.read_csv(DATA_FILE)
-    return df
+raw = pd.read_csv(DATA_FILE)
 
-raw = load_data()
 
-# 3) Build features for regression
-# Target: departure_delay_m
-# Features:
-#  - arrival_delay_m
-#  - planned_dwell_m = (departure_plan - arrival_plan) in minutes
-#  - category
-#  - hour from arrival_plan
-
+# ----------------------------
+# Build simple features
+# ----------------------------
 # Convert time columns
 raw["arrival_plan"] = pd.to_datetime(raw["arrival_plan"], errors="coerce")
 raw["departure_plan"] = pd.to_datetime(raw["departure_plan"], errors="coerce")
 
-# Features
+# Time features
 raw["hour"] = raw["arrival_plan"].dt.hour
+raw["day_of_week"] = raw["arrival_plan"].dt.dayofweek  # 0=Mon ... 6=Sun
+
+# planned dwell time in minutes
 raw["planned_dwell_m"] = (raw["departure_plan"] - raw["arrival_plan"]).dt.total_seconds() / 60
 
-# Keep needed columns
-df = raw[["departure_delay_m", "arrival_delay_m", "planned_dwell_m", "category", "hour"]].copy()
+# simple flags
+raw["is_peak"] = raw["hour"].isin([7, 8, 9, 16, 17, 18]).astype(int)
+raw["arrival_delay_flag"] = (raw["arrival_delay_m"] > 6).astype(int)
 
-# Convert to numeric (safe)
-for col in ["departure_delay_m", "arrival_delay_m", "planned_dwell_m", "category", "hour"]:
-    df[col] = pd.to_numeric(df[col], errors="coerce")
+# Keep only needed columns (target + 8 features)
+cols = [
+    "departure_delay_m",     # target
+    "arrival_delay_m",
+    "planned_dwell_m",
+    "category",
+    "hour",
+    "line",
+    "day_of_week",
+    "is_peak",
+    "arrival_delay_flag",
+]
+df = raw[cols].copy()
+
+# Convert to numeric (easy)
+for c in cols:
+    df[c] = pd.to_numeric(df[c], errors="coerce")
 
 # Drop missing
 df = df.dropna()
@@ -65,43 +80,61 @@ df = df[(df["arrival_delay_m"] >= 0) & (df["arrival_delay_m"] <= 180)]
 df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
 df = df[(df["category"] >= 1) & (df["category"] <= 7)]
 df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
+df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
 
-# 4) Sidebar navigation
+
+# ----------------------------
+# Sidebar navigation
+# ----------------------------
 st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
+st.sidebar.success("Using built-in dataset (GitHub Release)")
 
+
+# ----------------------------
 # Page 01: Introduction
+# ----------------------------
 if page == "01 Introduction":
-    st.subheader("Business Idea")
+    st.subheader("Goal")
     st.write(
         """
-A train **arrives first at a station** and then **departs**.  
-After it arrives, we can get these following values:
-- how late it arrived (`arrival_delay_m`)
-- how long it is planned to stop at this station(`planned_dwell_m`)
-- what type of station it is (`category`)
-- what time of day it is (`hour`)
+We predict **departure_delay_m** (minutes).
 
-So we predict the **departure delay** (`departure_delay_m`).
+**Why it makes sense:** a train arrives first, then departs.  
+After arrival, we already know arrival delay and station/time features.
+        """
+    )
+
+    st.subheader("Variables used (8 features)")
+    st.write(
+        """
+**Target (y):**
+- departure_delay_m
+
+**Features (X):**
+- arrival_delay_m
+- planned_dwell_m
+- category
+- hour
+- line
+- day_of_week
+- is_peak
+- arrival_delay_flag
         """
     )
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Rows in raw data", f"{len(raw):,}")
-    c2.metric("Rows used (after cleaning)", f"{len(df):,}")
-    c3.metric("Columns used", "5 columns")
+    c2.metric("Rows used (cleaned)", f"{len(df):,}")
+    c3.metric("Number of variables (features)", "8")
 
-    st.subheader("Dataset preview (raw)")
-    st.dataframe(raw.head(20))
+    st.subheader("Preview (cleaned table)")
+    st.dataframe(df.head(30))
 
-    st.subheader("Modeling table preview (cleaned)")
-    st.dataframe(df.head(20))
 
-    st.subheader("Variables used in Linear Regression")
-    st.write("**Target (y):** departure_delay_m")
-    st.write("**Features (X):** arrival_delay_m, planned_dwell_m, category, hour")
-
+# ----------------------------
 # Page 02: Data Visualization
+# ----------------------------
 elif page == "02 Data Visualization":
     st.subheader("1) Departure delay distribution")
     fig = plt.figure()
@@ -124,26 +157,31 @@ elif page == "02 Data Visualization":
     plt.ylabel("departure_delay_m (minutes)")
     st.pyplot(fig)
 
-    st.subheader("4) Departure delay by station category")
-    fig = plt.figure()
-    cats = sorted(df["category"].unique())
-    data = [df[df["category"] == c]["departure_delay_m"] for c in cats]
-    plt.boxplot(data, labels=cats)
-    plt.xlabel("category (1=hub ... 7=small station)")
-    plt.ylabel("departure_delay_m (minutes)")
-    st.pyplot(fig)
-
-    st.subheader("5) Correlation heatmap")
-    fig = plt.figure()
-    corr = df[["departure_delay_m", "arrival_delay_m", "planned_dwell_m", "category", "hour"]].corr()
+    st.subheader("4) Correlation heatmap (target + features)")
+    fig = plt.figure(figsize=(10, 6))
+    corr = df.corr()
     sns.heatmap(corr, annot=True, fmt=".2f")
     st.pyplot(fig)
 
-# Page 03: Prediction (Linear Regression)
+
+# ----------------------------
+# Page 03: Prediction
+# ----------------------------
 else:
     st.subheader("Train Linear Regression model")
 
-    X = df[["arrival_delay_m", "planned_dwell_m", "category", "hour"]]
+    feature_cols = [
+        "arrival_delay_m",
+        "planned_dwell_m",
+        "category",
+        "hour",
+        "line",
+        "day_of_week",
+        "is_peak",
+        "arrival_delay_flag",
+    ]
+
+    X = df[feature_cols]
     y = df["departure_delay_m"]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -160,15 +198,11 @@ else:
     c1.metric("MAE (minutes)", f"{mae:.2f}")
     c2.metric("R²", f"{r2:.3f}")
 
-    st.subheader("Model coefficients")
-    coef_df = pd.DataFrame({
-        "feature": ["arrival_delay_m", "planned_dwell_m", "category", "hour"],
-        "coefficient": model.coef_
-    })
+    st.subheader("Coefficients (how each feature affects prediction)")
+    coef_df = pd.DataFrame({"feature": feature_cols, "coefficient": model.coef_})
     st.dataframe(coef_df)
 
-    st.subheader("Actual vs Predicted (required plot)")
-    # Plot a sample for speed (too many points can be slow)
+    st.subheader("Actual vs Predicted")
     max_points = st.slider("Max points to plot", 2000, 50000, 20000, step=2000)
 
     y_test_arr = np.array(y_test)
@@ -186,10 +220,10 @@ else:
     plt.scatter(p_plot, y_plot, s=10, alpha=0.3)
     mn = min(p_plot.min(), y_plot.min())
     mx = max(p_plot.max(), y_plot.max())
-    plt.plot([mn, mx], [mn, mx], "r--", linewidth=3)  # y = x line
-    plt.title("Actual vs Predicted")
-    plt.xlabel("Predicted departure_delay_m")
-    plt.ylabel("Actual departure_delay_m")
+    plt.plot([mn, mx], [mn, mx], "r--", linewidth=3)
+    plt.title("Actual vs Predicted (departure_delay_m)")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
     st.pyplot(fig)
 
     st.subheader("Try your own inputs")
@@ -205,12 +239,28 @@ else:
     with col4:
         hour = st.number_input("hour (0-23)", 0, 23, 8)
 
+    col5, col6 = st.columns(2)
+    with col5:
+        line = st.number_input("line", 0, 5000, 1)
+    with col6:
+        day_of_week = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
+
+    col7, col8 = st.columns(2)
+    with col7:
+        is_peak = st.number_input("is_peak (0/1)", 0, 1, 0)
+    with col8:
+        arrival_delay_flag = st.number_input("arrival_delay_flag (0/1)", 0, 1, 0)
+
     new_X = pd.DataFrame([{
         "arrival_delay_m": arrival_delay,
         "planned_dwell_m": dwell,
         "category": category,
-        "hour": hour
+        "hour": hour,
+        "line": line,
+        "day_of_week": day_of_week,
+        "is_peak": is_peak,
+        "arrival_delay_flag": arrival_delay_flag
     }])
 
     pred_one = model.predict(new_X)[0]
-    st.write(f"✅ Predicted departure_delay_m: **{pred_one:.1f} minutes**")
+    st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
