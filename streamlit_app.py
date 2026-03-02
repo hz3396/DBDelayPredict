@@ -77,6 +77,7 @@ st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
 
 # Page 01: Introduction
+st.image(“Weixin Image_2026-03-02_181855_878.jpg”, width=500)
 if page == "01 Introduction":
     st.header("Project Overview")
     st.write(
