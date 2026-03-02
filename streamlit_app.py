@@ -68,7 +68,7 @@ df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
 
 # 4) Sidebar navigation
 st.sidebar.header("Page Selection")
-page = st.sidebar.radio(["01 Introduction", "02 Data Visualization", "03 Prediction"])
+page = st.sidebar.radio(page = st.sidebar.radio(label="Select Page", options=["01 Introduction", "02 Data Visualization", "03 Prediction"]))
 
 # Page 01: Introduction
 if page == "01 Introduction":
