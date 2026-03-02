@@ -72,13 +72,13 @@ page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualizatio
 
 # Page 01: Introduction
 if page == "01 Introduction":
-    st.subheader("Business idea (easy story)")
+    st.subheader("Business Idea")
     st.write(
         """
-A train **arrives first** and then **departs**.  
-After it arrives, we already know:
+A train **arrives first at a station** and then **departs**.  
+After it arrives, we can get these following values:
 - how late it arrived (`arrival_delay_m`)
-- how long it is planned to stop (`planned_dwell_m`)
+- how long it is planned to stop at this station(`planned_dwell_m`)
 - what type of station it is (`category`)
 - what time of day it is (`hour`)
 
