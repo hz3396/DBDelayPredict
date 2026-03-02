@@ -14,7 +14,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # CONFIG
 # =============================
 st.set_page_config(page_title="Deutsche Bahn Departure Delay Predictor", layout="wide")
-st.title("🚆 Deutsche Bahn Departure Delay Predictor (Linear Regression)")
+st.title("🚆 Deutsche Bahn Departure Delay Predictor")
 st.caption("We predict departure delay (minutes) using information available at a train station.")
 
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
