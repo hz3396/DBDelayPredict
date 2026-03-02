@@ -136,33 +136,33 @@ We use that information to predict how late the train will depart.
     st.dataframe(df.head(20))
 
 # Page 02: Data Visualization
-elif page == "02 Data Visualization":
+    elif page == "02 Data Visualization":
     st.subheader("1) Departure delay distribution")
-    fig = plt.figure()
+    fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_m"], bins=50)
     plt.xlabel("departure_delay_m (minutes)")
     plt.ylabel("count")
-    st.pyplot(fig)
-
+    st.pyplot(fig, use_container_width=False)
+    
     st.subheader("2) Arrival delay vs Departure delay")
-    fig = plt.figure()
+    fig = plt.figure(figsize=(7, 4))
     plt.scatter(df["arrival_delay_m"], df["departure_delay_m"], s=8, alpha=0.3)
     plt.xlabel("arrival_delay_m (minutes)")
     plt.ylabel("departure_delay_m (minutes)")
-    st.pyplot(fig)
-
+    st.pyplot(fig, use_container_width=False)
+    
     st.subheader("3) Planned dwell time vs Departure delay")
-    fig = plt.figure()
+    fig = plt.figure(figsize=(7, 4))
     plt.scatter(df["planned_dwell_m"], df["departure_delay_m"], s=8, alpha=0.3)
     plt.xlabel("planned_dwell_m (minutes)")
     plt.ylabel("departure_delay_m (minutes)")
-    st.pyplot(fig)
-
+    st.pyplot(fig, use_container_width=False)
+    
     st.subheader("4) Correlation heatmap (target + features)")
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(8, 5))
     corr = df.corr()
     sns.heatmap(corr, annot=True, fmt=".2f")
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=False)
 
 # Page 03: Prediction
 else:
