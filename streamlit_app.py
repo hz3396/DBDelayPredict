@@ -194,7 +194,7 @@ We use that information to predict how late the train will depart.
 
 # Page 02: Data Visualization
 elif page == "02 Data Visualization":
-    st.image("Weixin Image_2026-03-02_181855_878.jpg", width=1500)
+    st.image("02.jpg", width=1500)
     st.subheader("1) Departure delay distribution")
     fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_m"], bins=50)
@@ -228,8 +228,8 @@ elif page == "02 Data Visualization":
 # =========================
 # Page 03: Prediction
 else:
+    st.image("02.jpg", width=1500)
     st.subheader("Train Linear Regression model")
-
     feature_cols = [
         "arrival_delay_m",
         "planned_dwell_m",
