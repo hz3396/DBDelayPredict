@@ -183,12 +183,14 @@ We use that information to predict how late the train will depart.
     st.dataframe(df.isna().sum())
 
 
+
 # Page 02: Data Visualization
 elif page == "02 Data Visualization":
     st.image("02.jpg", width=1500)
 
+    # Chart 1: Histogram of departure delays, filtered to 1 to 20 minutes
     st.subheader("1) Departure Delay Distribution")
-    st.markdown("Most trains leave on time or with just a small delay. We zoom into the 1–20 minute range to see the pattern more clearly.")
+    st.markdown("This histogram shows how many trains fall into each delay range between 1 and 20 minutes. The x axis represents the delay in minutes, and the y axis shows the count of trains. You can see that most delayed trains only have a very short delay, and longer delays are much less common.")
     fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_m"], bins=50, range=(1, 20))
     plt.xlim(1, 20)
@@ -196,33 +198,40 @@ elif page == "02 Data Visualization":
     plt.ylabel("count")
     st.pyplot(fig)
 
+    # Chart 2: Scatter plot comparing arrival delay and departure delay
     st.subheader("2) Arrival Delay vs Departure Delay")
-    st.markdown("If a train leaves late, does it also arrive late? This scatter plot shows there is a strong positive relationship between the two.")
+    st.markdown("Each dot represents a train. The x axis is the departure delay and the y axis is the arrival delay. If the dots form a line going upward, it means trains that leave late also tend to arrive late. You can clearly see a positive correlation here.")
     fig = plt.figure(figsize=(7, 5))
-    sample = df[(df["arrival_delay_m"] > 0) & (df["departure_delay_m"] > 0)].sample(3000, random_state=42)
+    delay_df = df[(df["arrival_delay_m"] > 0) & (df["departure_delay_m"] > 0)]
+    sample_size = min(3000, len(delay_df))
+    sample = delay_df.sample(sample_size, random_state=42)
     plt.scatter(sample["departure_delay_m"], sample["arrival_delay_m"], alpha=0.3, s=10)
     plt.xlabel("Departure Delay (min)")
     plt.ylabel("Arrival Delay (min)")
     st.pyplot(fig)
 
-    st.subheader("3) On-Time vs Delayed Departures")
-    st.markdown("A simple pie chart showing the overall proportion of on-time trains versus delayed ones. It gives a quick sense of how reliable the service is.")
-    counts = df["departure_delay_check"].value_counts()
+    # Chart 3: Pie chart showing the ratio of on time vs delayed departures
+    st.subheader("3) On Time vs Delayed Departures")
+    st.markdown("This pie chart shows the percentage of trains that departed on time versus those that were delayed. The green portion is on time and the red portion is delayed. You can quickly tell that the vast majority of trains do depart on time.")
+    on_time_count = (df["departure_delay_m"] == 0).sum()
+    delay_count = (df["departure_delay_m"] > 0).sum()
     fig, ax = plt.subplots(figsize=(5, 5))
-    ax.pie(counts, labels=counts.index, autopct="%1.1f%%", colors=["#4CAF50", "#F44336"])
+    ax.pie([on_time_count, delay_count], labels=["on_time", "delay"], autopct="%1.1f%%", colors=["#4CAF50", "#F44336"])
     st.pyplot(fig)
 
+    # Chart 4: Bar chart ranking states by delay rate percentage
     st.subheader("4) Delay Rate by State")
-    st.markdown("This bar chart ranks German states by their delay rate. You can quickly see which states have the most delays and which ones are more punctual.")
-    state_delay = df.groupby("state")["departure_delay_check"].apply(lambda x: (x == "delay").mean() * 100).sort_values(ascending=False)
+    st.markdown("Each bar represents a German state, and the length shows its delay rate as a percentage. States at the top have the highest delay rates. This helps you compare which regions are more likely to experience train delays.")
+    state_delay = df.groupby("state")["departure_delay_m"].apply(lambda x: (x > 0).mean() * 100).sort_values(ascending=False)
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_delay.values, y=state_delay.index, palette="Reds_r", ax=ax)
     ax.set_xlabel("Delay Rate (%)")
     ax.set_ylabel("State")
     st.pyplot(fig)
 
+    # Chart 5: Bar chart of the top 10 train lines with the worst average delays
     st.subheader("5) Top 10 Lines with Highest Avg Departure Delay")
-    st.markdown("These are the 10 train lines with the worst average departure delays. Commuters might want to keep an eye on these.")
+    st.markdown("This chart lists the 10 train lines that have the highest average departure delay. The longer the bar, the worse the average delay for that line. It is useful for identifying the most problematic routes in the network.")
     line_delay = df.groupby("line")["departure_delay_m"].mean().sort_values(ascending=False).head(10)
     fig, ax = plt.subplots(figsize=(10, 5))
     sns.barplot(x=line_delay.values, y=line_delay.index.astype(str), palette="magma", ax=ax)
@@ -230,16 +239,18 @@ elif page == "02 Data Visualization":
     ax.set_ylabel("Line")
     st.pyplot(fig)
 
+    # Chart 6: Boxplot showing the spread of delays for each train category
     st.subheader("6) Departure Delay by Category")
-    st.markdown("This boxplot breaks down delays by train category, showing which types of trains tend to run late more often and how spread out their delays are.")
+    st.markdown("Each box represents a train category. The box itself covers the middle 50% of delay values, and the line inside the box is the median. The dots outside are outliers. This lets you compare which category of trains tends to have bigger or smaller delays.")
     fig, ax = plt.subplots(figsize=(8, 5))
     sns.boxplot(data=df[df["departure_delay_m"] <= 20], x="category", y="departure_delay_m", palette="Set2", ax=ax)
     ax.set_xlabel("Category")
     ax.set_ylabel("Departure Delay (min)")
     st.pyplot(fig)
 
+    # Chart 7: Bar chart showing train volume per state
     st.subheader("7) Number of Trains by State")
-    st.markdown("This chart shows train volume by state. States with more trains may naturally have more delays simply due to higher traffic.")
+    st.markdown("This chart shows how many trains operate in each German state. States with longer bars have more train traffic. Keep in mind that states with higher train volume might naturally have more total delays simply because there are more trains running.")
     state_counts = df["state"].value_counts()
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_counts.values, y=state_counts.index, palette="viridis", ax=ax)
