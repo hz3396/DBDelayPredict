@@ -277,6 +277,8 @@ else:
 
     st.caption(f"X shape after encoding: {X.shape[0]} rows × {X.shape[1]} columns")
 
+    y = df["departure_delay_m"]
+    
     # -----------------------------
     # 4) Train/Test + Model
     # -----------------------------
