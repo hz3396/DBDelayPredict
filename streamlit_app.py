@@ -347,8 +347,9 @@ else:
     
     with col8:
         arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
-        
-    "arrival_delay_m": arrival_delay,
+    
+    new_X = pd.DataFrame([{   
+        "arrival_delay_m": arrival_delay,
         "planned_dwell_m": dwell,
         "category": category,
         "hour": hour,
