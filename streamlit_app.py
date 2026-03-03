@@ -91,24 +91,6 @@ We use that information to predict how late the train will depart.
         """
     )
 
-    # Variables explanation
-    st.subheader("Variables Used")
-
-    st.write("**Target (y):**")
-    st.write("- departure_delay_m (minutes)")
-
-    st.write("**Features (X): 8 variables**")
-    st.write("""
-    - arrival_delay_m  
-    - planned_dwell_m  
-    - category  
-    - hour  
-    - line  
-    - day_of_week  
-    - is_peak  
-    - arrival_delay_flag  
-    """)
-
     # Dataset info
     st.subheader("Dataset Information")
 
