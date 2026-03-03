@@ -11,17 +11,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
-
-# =========================
 # App setup
-# =========================
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚆 Deutsche Bahn Train Departure Delay Predictor")
 
-
-# =========================
 # Load data (GitHub Release)
-# =========================
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
 DATA_FILE = "db_sample.csv"
 
@@ -37,10 +31,7 @@ raw = pd.read_csv(
     na_values=["None", "none", "NULL", "null", "NaN", "nan", ""],
 )
 
-
-# =========================
-# Cleaning / Feature engineering
-# =========================
+# Cleaning
 def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2 = raw_df.copy()
 
@@ -113,7 +104,6 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
             df[c] = df[c].fillna("").astype(str).str.strip()
 
     return df
-
 
 df = clean_data(raw)
 
