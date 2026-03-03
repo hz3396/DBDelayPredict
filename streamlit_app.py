@@ -326,27 +326,27 @@ else:
 
     col1, col2 = st.columns(2)
     col3, col4 = st.columns(2)
-        with col1:
-             arrival_delay = st.slider("arrival_delay_m (0-180)",min_value=0.0,max_value=180.0,value=5.0,key="inp_arrival_delay")
-        with col2:
-            dwell = st.slider("planned_dwell_m (0-60)",min_value=0.0,max_value=60.0,value=2.0,key="inp_dwell")
-        with col3:
-            category = st.slider("category (1-7)",min_value=1,max_value=7,value=3,key="inp_category")
-        with col4:
-            hour = st.slider("hour (0-23)",min_value=0,max_value=23,value=8,key="inp_hour")
+    with col1:
+        arrival_delay = st.slider("arrival_delay_m (0-180)",min_value=0.0,max_value=180.0,value=5.0,key="inp_arrival_delay")
+    with col2:
+        dwell = st.slider("planned_dwell_m (0-60)",min_value=0.0,max_value=60.0,value=2.0,key="inp_dwell")
+    with col3:
+        category = st.slider("category (1-7)",min_value=1,max_value=7,value=3,key="inp_category")
+    with col4:
+        hour = st.slider("hour (0-23)",min_value=0,max_value=23,value=8,key="inp_hour")
     
-        col5, col6 = st.columns(2)
-        with col5:
-            line = st.number_input("line", 0, 5000, 1, key="inp_line")
-        with col6:
-            day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)",min_value=0,max_value=6,value=1,key="inp_day_of_week")
+    col5, col6 = st.columns(2)
+    with col5:
+        line = st.number_input("line", 0, 5000, 1, key="inp_line")
+    with col6:
+        day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)",min_value=0,max_value=6,value=1,key="inp_day_of_week")
     
-        col7, col8 = st.columns(2)
-        with col7:
-            is_peak = int(st.toggle("Is Peak Hour?", key="inp_is_peak"))
+    col7, col8 = st.columns(2)
+    with col7:
+        is_peak = int(st.toggle("Is Peak Hour?", key="inp_is_peak"))
     
-        with col8:
-            arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
+    with col8:
+        arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
         
     "arrival_delay_m": arrival_delay,
         "planned_dwell_m": dwell,
