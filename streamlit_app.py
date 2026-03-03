@@ -11,11 +11,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
+
 # =========================
 # App setup
 # =========================
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚆 Deutsche Bahn Train Departure Delay Predictor")
+
 
 # =========================
 # Load data (GitHub Release)
@@ -32,11 +34,12 @@ if not os.path.exists(DATA_FILE):
 
 raw = pd.read_csv(
     DATA_FILE,
-    na_values=["None", "none", "NULL", "null", "NaN", "nan", ""]
+    na_values=["None", "none", "NULL", "null", "NaN", "nan", ""],
 )
 
+
 # =========================
-# Clean data
+# Cleaning / Feature engineering
 # =========================
 def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2 = raw_df.copy()
@@ -56,45 +59,46 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2["is_peak"] = raw2["hour"].isin([7, 8, 9, 16, 17, 18]).astype(int)
     raw2["arrival_delay_flag"] = (raw2["arrival_delay_m"] > 6).astype(int)
 
-    # Keep target + features (route 2 uses these 10)
+    # Keep target + future-use columns
     cols = [
-        "departure_delay_m",     # target
+        "departure_delay_m",  # target
         "arrival_delay_m",
         "planned_dwell_m",
         "category",
         "hour",
+        "line",
         "day_of_week",
         "is_peak",
+        "arrival_delay_flag",
         "station",
         "state",
         "city",
         "info",
-        "arrival_delay_flag",    # 你也可以留着（虽然这版 prediction 里没用它也行）
     ]
 
     cols_existing = [c for c in cols if c in raw2.columns]
     df = raw2[cols_existing].copy()
 
-    # Convert numeric columns (注意：不再把 line 当数值，避免大量 NaN 被 drop)
+    # Convert numeric columns
     numeric_cols = [
         "departure_delay_m",
         "arrival_delay_m",
         "planned_dwell_m",
         "category",
         "hour",
+        "line",
         "day_of_week",
         "is_peak",
         "arrival_delay_flag",
     ]
     numeric_cols = [c for c in numeric_cols if c in df.columns]
-
     for c in numeric_cols:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
     # Drop rows missing critical numeric columns
     df = df.dropna(subset=numeric_cols)
 
-    # Basic filtering on numeric columns only
+    # Basic filtering
     df = df[(df["departure_delay_m"] >= 0) & (df["departure_delay_m"] <= 180)]
     df = df[(df["arrival_delay_m"] >= 0) & (df["arrival_delay_m"] <= 180)]
     df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
@@ -102,10 +106,11 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
     df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
 
-    # Clean text columns (keep NaN as empty; strip spaces)
+    # Clean text columns
     text_cols = ["station", "state", "city", "info"]
     for c in text_cols:
         if c in df.columns:
+            # NOTE: 这里不要先 astype(str)，否则 NaN 会变成字符串 "nan"
             df[c] = df[c].fillna("").astype(str).str.strip()
 
     return df
@@ -113,16 +118,17 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 df = clean_data(raw)
 
+
 # =========================
 # Sidebar navigation
 # =========================
 st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
 
+
 # =========================
 # Page 01: Introduction
 # =========================
-# 如果图片不在仓库根目录，这行会报错。你可先注释掉测试。
 st.image("Weixin Image_2026-03-02_181855_878.jpg", width=1500)
 
 if page == "01 Introduction":
@@ -184,15 +190,15 @@ We use that information to predict how late the train will depart.
     else:
         st.error("🚨 High percentage of missing data in the raw dataset.")
 
-    st.markdown("##### 📈 Summary Statistics (cleaned)")
-    st.dataframe(df.describe(), width="stretch")
+    st.markdown("##### 📈 Summary Statistics")
+    st.dataframe(df.describe())
 
     col1, col2 = st.columns(2)
     col1.metric("Total rows (raw)", f"{len(raw):,}")
     col2.metric("Rows used (cleaned)", f"{len(df):,}")
 
     st.subheader("Missing Values (after cleaning)")
-    st.dataframe(df.isna().sum(), width="stretch")
+    st.dataframe(df.isna().sum())
 
 
 # =========================
@@ -220,7 +226,7 @@ elif page == "02 Data Visualization":
     plt.ylabel("departure_delay_m (minutes)")
     st.pyplot(fig)
 
-    st.subheader("4) Correlation heatmap (numeric only)")
+    st.subheader("4) Correlation heatmap (numeric columns)")
     fig = plt.figure(figsize=(8, 5))
     corr = df.select_dtypes(include=[np.number]).corr()
     sns.heatmap(corr, annot=True, fmt=".2f")
@@ -228,13 +234,17 @@ elif page == "02 Data Visualization":
 
 
 # =========================
-# Page 03: Prediction (Route 2)
+# Page 03: Prediction (Route 2, simplified & stable)
 # =========================
 else:
     st.subheader("Train Linear Regression model (Route 2: includes station/state/city/info)")
 
-    # 10 variables (满足作业 >= 8 variables)
-    candidate_features = [
+    # ---- Fixed settings (NO sliders, simple for intro class) ----
+    TOP_K = 60          # keep top 60 categories for each text column, others -> "Other"
+    TRAIN_MAX = 50000   # train on at most 50k rows for speed (fixed, not shown)
+
+    # 10 variables (>=8 variables requirement)
+    feature_cols = [
         "arrival_delay_m",
         "planned_dwell_m",
         "category",
@@ -246,49 +256,58 @@ else:
         "city",
         "info",
     ]
-    candidate_features = [c for c in candidate_features if c in df.columns]
-    features_selection = candidate_features
+    feature_cols = [c for c in feature_cols if c in df.columns]
 
-    # Build X/y
-    X_raw = df[features_selection].copy()
-    y = df["departure_delay_m"].copy()
-
-    # ====== 关键稳定性改动 1：Top-K 归类，防止 dummy 列爆炸 ======
-    TOP_K = st.slider("Top-K categories kept for text columns (others -> 'Other')", 10, 200, 60, step=10)
-
-    text_cols = [c for c in ["station", "state", "city", "info"] if c in X_raw.columns]
-    for c in text_cols:
-        top = X_raw[c].value_counts().head(TOP_K).index
-        X_raw[c] = X_raw[c].where(X_raw[c].isin(top), other="Other")
-
-    # one-hot encode
-    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
-
-    # ====== 关键稳定性改动 2：训练用抽样，跑得更快更稳 ======
-    train_n = st.slider("Training sample size (for speed)", 10000, 200000, 50000, step=10000)
-    if len(X) > train_n:
-        idx = np.random.RandomState(42).choice(len(X), size=train_n, replace=False)
-        X_model = X.iloc[idx].copy()
-        y_model = y.iloc[idx].copy()
-    else:
-        X_model = X
-        y_model = y
-
-    st.caption(f"After encoding: {X.shape[0]} rows × {X.shape[1]} columns (model trains on {len(X_model):,} rows)")
-
-    if X.shape[1] == 0:
-        st.error("X has 0 columns after encoding. Something is wrong.")
+    # Safety: must have target + features
+    if "departure_delay_m" not in df.columns:
+        st.error("Missing target column: departure_delay_m")
         st.stop()
 
-    # Train/Test + Model
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_model, y_model, test_size=0.2, random_state=42
+    # ---- helper: limit text categories (avoid huge dummy columns) ----
+    def limit_top_k(series: pd.Series, k: int) -> pd.Series:
+        s = series.fillna("").astype(str).str.strip()
+        top = s.value_counts().head(k).index
+        return s.where(s.isin(top), other="Other")
+
+    # Build modeling table
+    model_df = df[feature_cols + ["departure_delay_m"]].copy()
+
+    # Apply Top-K to text columns
+    text_cols = [c for c in ["station", "state", "city", "info"] if c in model_df.columns]
+    for c in text_cols:
+        model_df[c] = limit_top_k(model_df[c], TOP_K)
+
+    # Train sample for speed (fixed, simple)
+    if len(model_df) > TRAIN_MAX:
+        model_df = model_df.sample(TRAIN_MAX, random_state=42)
+
+    # X / y
+    y = model_df["departure_delay_m"]
+    X_raw = model_df[feature_cols].copy()
+
+    # One-hot encode text columns
+    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
+
+    if X.shape[1] == 0:
+        st.error("X has 0 columns after encoding. Please check selected features.")
+        st.stop()
+
+    st.caption(
+        f"Using {len(feature_cols)} original variables (text variables are one-hot encoded). "
+        f"Training rows: {len(X):,} | Encoded columns: {X.shape[1]:,}"
     )
 
+    # Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # Model
     model = LinearRegression()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
+    # Metrics
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
@@ -296,23 +315,24 @@ else:
     c1.metric("MAE (minutes)", f"{mae:.2f}")
     c2.metric("R²", f"{r2:.3f}")
 
-    # Coefficients
-    st.subheader("Coefficients (encoded features)")
-    coef_df = pd.DataFrame({"feature": X_train.columns, "coefficient": model.coef_})
-    st.dataframe(coef_df.head(200), width="stretch")
-    st.caption("Showing first 200 coefficients (there can be many after one-hot encoding).")
+    # ---- Coefficients: show only Top 20 (otherwise too messy) ----
+    st.subheader("Top coefficients (encoded features)")
+    coef_df = pd.DataFrame({"feature": X.columns, "coefficient": model.coef_})
+    coef_df["abs_coef"] = coef_df["coefficient"].abs()
+    coef_df = coef_df.sort_values("abs_coef", ascending=False).drop(columns=["abs_coef"]).head(20)
+    st.dataframe(coef_df, width="stretch")
 
-    # Actual vs Predicted plot
-    st.subheader("Actual vs Predicted")
-    max_points = st.slider("Max points to plot", 2000, 50000, 20000, step=2000, key="pred_plot_points")
+    # ---- Actual vs Predicted plot (like your example) ----
+    st.subheader("Actual vs Predicted (departure_delay_m)")
+    max_points = min(20000, len(y_test))  # fixed, no slider
 
     y_test_arr = np.array(y_test)
     y_pred_arr = np.array(y_pred)
 
     if len(y_test_arr) > max_points:
-        pick = np.random.RandomState(42).choice(len(y_test_arr), size=max_points, replace=False)
-        y_plot = y_test_arr[pick]
-        p_plot = y_pred_arr[pick]
+        idx = np.random.choice(len(y_test_arr), size=max_points, replace=False)
+        y_plot = y_test_arr[idx]
+        p_plot = y_pred_arr[idx]
     else:
         y_plot = y_test_arr
         p_plot = y_pred_arr
@@ -327,37 +347,45 @@ else:
     plt.ylabel("Actual")
     st.pyplot(fig)
 
-    # Try your own inputs
+    # ---- Simple "Try your own inputs" (works for text too) ----
     st.subheader("Try your own inputs")
 
     input_data = {}
-    for col in features_selection:
-        if col in text_cols:
-            input_data[col] = st.text_input(col, value="", key=f"inp_{col}")
-        elif col == "is_peak":
-            input_data[col] = st.number_input("is_peak (0/1)", 0, 1, 0, key=f"inp_{col}")
-        elif col == "category":
-            input_data[col] = st.number_input("category (1-7)", 1, 7, 3, key=f"inp_{col}")
-        elif col == "hour":
-            input_data[col] = st.number_input("hour (0-23)", 0, 23, 8, key=f"inp_{col}")
-        elif col == "day_of_week":
-            input_data[col] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1, key=f"inp_{col}")
-        elif col == "planned_dwell_m":
-            input_data[col] = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0, key=f"inp_{col}")
-        elif col == "arrival_delay_m":
-            input_data[col] = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0, key=f"inp_{col}")
-        else:
-            input_data[col] = st.number_input(col, value=0.0, key=f"inp_{col}")
+
+    # numeric inputs
+    if "arrival_delay_m" in feature_cols:
+        input_data["arrival_delay_m"] = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0)
+    if "planned_dwell_m" in feature_cols:
+        input_data["planned_dwell_m"] = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0)
+    if "category" in feature_cols:
+        input_data["category"] = st.number_input("category (1-7)", 1, 7, 3)
+    if "hour" in feature_cols:
+        input_data["hour"] = st.number_input("hour (0-23)", 0, 23, 8)
+    if "day_of_week" in feature_cols:
+        input_data["day_of_week"] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
+    if "is_peak" in feature_cols:
+        input_data["is_peak"] = st.number_input("is_peak (0/1)", 0, 1, 0)
+
+    # text inputs (will be Top-K limited; unknown -> Other)
+    if "station" in feature_cols:
+        input_data["station"] = st.text_input("station (optional)", value="")
+    if "state" in feature_cols:
+        input_data["state"] = st.text_input("state (optional)", value="")
+    if "city" in feature_cols:
+        input_data["city"] = st.text_input("city (optional)", value="")
+    if "info" in feature_cols:
+        input_data["info"] = st.text_input("info (optional)", value="")
 
     new_X_raw = pd.DataFrame([input_data])
 
-    # 同样做 Top-K 归类（保证和训练一致）
+    # Apply SAME Top-K rule to new input
     for c in text_cols:
-        top = X_raw[c].value_counts().head(TOP_K).index
-        new_X_raw[c] = new_X_raw[c].where(new_X_raw[c].isin(top), other="Other")
+        new_X_raw[c] = limit_top_k(new_X_raw[c], TOP_K)
 
     new_X = pd.get_dummies(new_X_raw, columns=text_cols, drop_first=True)
-    new_X = new_X.reindex(columns=X_train.columns, fill_value=0)
+
+    # Align columns with training X
+    new_X = new_X.reindex(columns=X.columns, fill_value=0)
 
     pred_one = model.predict(new_X)[0]
     st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
