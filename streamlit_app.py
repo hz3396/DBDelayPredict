@@ -138,7 +138,7 @@ We use that information to predict how late the train will depart.
         st.dataframe(df.tail(rows))
     elif view == "Random":
         st.dataframe(df.sample(n=rows))
-
+    
     st.caption(f"This data frame has {df.shape[0]} rows and {df.shape[1]} columns.")
 
     # ------------------------------
@@ -178,18 +178,6 @@ We use that information to predict how late the train will depart.
     missing = df.isna().sum()
     st.dataframe(missing)
 
-    # Target statistics
-    st.subheader("Target Variable Summary")
-    st.write("Summary statistics for departure_delay_m:")
-    st.dataframe(df["departure_delay_m"].describe())
-
-    # Raw data sample
-    st.subheader("Raw Dataset Sample (first 20 rows)")
-    st.dataframe(raw.head(40))
-
-    # Modeling dataset sample
-    st.subheader("Modeling Dataset Sample (first 20 rows)")
-    st.dataframe(df.head(20))
 
 # Page 02: Data Visualization
 elif page == "02 Data Visualization":
