@@ -27,50 +27,80 @@ if not os.path.exists(DATA_FILE):
 
 raw = pd.read_csv(DATA_FILE)
 
-# Build simple features
-# Convert time columns
-raw["arrival_plan"] = pd.to_datetime(raw["arrival_plan"], errors="coerce")
-raw["departure_plan"] = pd.to_datetime(raw["departure_plan"], errors="coerce")
+def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
+    raw2 = raw_df.copy()
 
-# Time features
-raw["hour"] = raw["arrival_plan"].dt.hour
-raw["day_of_week"] = raw["arrival_plan"].dt.dayofweek
+    # Convert time columns
+    raw2["arrival_plan"] = pd.to_datetime(raw2["arrival_plan"], errors="coerce")
+    raw2["departure_plan"] = pd.to_datetime(raw2["departure_plan"], errors="coerce")
 
-# planned dwell time in minutes
-raw["planned_dwell_m"] = (raw["departure_plan"] - raw["arrival_plan"]).dt.total_seconds() / 60
+    # Time features
+    raw2["hour"] = raw2["arrival_plan"].dt.hour
+    raw2["day_of_week"] = raw2["arrival_plan"].dt.dayofweek
 
-# simple flags
-raw["is_peak"] = raw["hour"].isin([7, 8, 9, 16, 17, 18]).astype(int)
-raw["arrival_delay_flag"] = (raw["arrival_delay_m"] > 6).astype(int)
+    # planned dwell time in minutes
+    raw2["planned_dwell_m"] = (raw2["departure_plan"] - raw2["arrival_plan"]).dt.total_seconds() / 60
 
-# Keep only needed columns (target + 8 features)
-cols = [
-    "departure_delay_m",     # target
-    "arrival_delay_m",
-    "planned_dwell_m",
-    "category",
-    "hour",
-    "line",
-    "day_of_week",
-    "is_peak",
-    "arrival_delay_flag",
-]
-df = raw[cols].copy()
+    # simple flags
+    raw2["is_peak"] = raw2["hour"].isin([7, 8, 9, 16, 17, 18]).astype(int)
+    raw2["arrival_delay_flag"] = (raw2["arrival_delay_m"] > 6).astype(int)
 
-# Convert to numeric (easy)
-for c in cols:
-    df[c] = pd.to_numeric(df[c], errors="coerce")
+    # Keep target + ALL future-use columns
+    cols = [
+        "departure_delay_m",     # target
+        "arrival_delay_m",
+        "planned_dwell_m",
+        "category",
+        "hour",
+        "line",
+        "day_of_week",
+        "is_peak",
+        "arrival_delay_flag",
+        "station",
+        "state",
+        "city",
+        "info",
+    ]
 
-# Drop missing
-df = df.dropna()
+    # Only keep columns that actually exist (prevents KeyError if a column is missing)
+    cols_existing = [c for c in cols if c in raw2.columns]
+    df = raw2[cols_existing].copy()
 
-# Simple filtering (keeps plots/model stable)
-df = df[(df["departure_delay_m"] >= 0) & (df["departure_delay_m"] <= 180)]
-df = df[(df["arrival_delay_m"] >= 0) & (df["arrival_delay_m"] <= 180)]
-df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
-df = df[(df["category"] >= 1) & (df["category"] <= 7)]
-df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
-df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
+    # Convert ONLY numeric columns
+    numeric_cols = [
+        "departure_delay_m",
+        "arrival_delay_m",
+        "planned_dwell_m",
+        "category",
+        "hour",
+        "line",
+        "day_of_week",
+        "is_peak",
+        "arrival_delay_flag",
+    ]
+    numeric_cols = [c for c in numeric_cols if c in df.columns]
+
+    for c in numeric_cols:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    # Drop rows missing critical numeric columns (so model/plots don’t crash)
+    df = df.dropna(subset=numeric_cols)
+
+    # Basic filtering on numeric columns only
+    df = df[(df["departure_delay_m"] >= 0) & (df["departure_delay_m"] <= 180)]
+    df = df[(df["arrival_delay_m"] >= 0) & (df["arrival_delay_m"] <= 180)]
+    df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
+    df = df[(df["category"] >= 1) & (df["category"] <= 7)]
+    df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
+    df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
+
+    # Clean text columns (optional but helpful)
+    text_cols = ["station", "state", "city", "info"]
+    for c in text_cols:
+        if c in df.columns:
+            df[c] = df[c].astype(str).fillna("").str.strip()
+
+    return df
 
 # Sidebar navigation
 st.sidebar.header("Controls")
