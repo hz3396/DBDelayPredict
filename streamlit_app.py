@@ -229,10 +229,13 @@ elif page == "02 Data Visualization":
 # Page 03: Prediction
 else:
     st.subheader("Train Linear Regression model")
-    # Target
-    y = df["departure_delay_m"]
-    
-    # All choosable X columns (your list)
+
+    # (Optional but safe) ensure df exists here
+    # df = clean_data(raw)
+
+    # -----------------------------
+    # 1) Candidate features (ONE place)
+    # -----------------------------
     candidate_features = [
         "arrival_delay_m",
         "planned_dwell_m",
@@ -247,43 +250,56 @@ else:
         "city",
         "info",
     ]
-    
-    # Keep only features that exist in df (prevents KeyError)
+
+    # Keep only features that exist in df
     candidate_features = [c for c in candidate_features if c in df.columns]
-    
+
+    # Target
+    y = df["departure_delay_m"]
+
+    # -----------------------------
+    # 2) Feature selection (uses candidate_features)
+    # -----------------------------
+    default_features = [
+        "arrival_delay_m",
+        "planned_dwell_m",
+        "category",
+        "hour",
+        "line",
+        "day_of_week",
+        "is_peak",
+        "arrival_delay_flag",
+    ]
+    default_features = [c for c in default_features if c in candidate_features]
+
     features_selection = st.multiselect(
         "Choose X variables",
         candidate_features,
-        default=[
-            "arrival_delay_m",
-            "planned_dwell_m",
-            "category",
-            "hour",
-            "line",
-            "day_of_week",
-            "is_peak",
-            "arrival_delay_flag",
-        ]
+        default=default_features if len(default_features) > 0 else candidate_features
     )
-    
+
     if len(features_selection) == 0:
         st.error("Please select at least 1 feature.")
         st.stop()
-    
-    # Build X
+
+    # -----------------------------
+    # 3) Build X and encode text (still uses selected features)
+    # -----------------------------
     X_raw = df[features_selection].copy()
-    
-    # Encode text columns (station/state/city/info) into numbers
+
     text_cols = ["station", "state", "city", "info"]
     text_cols = [c for c in text_cols if c in X_raw.columns]
-    
-    X_encoded = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
-    
-    st.caption(f"X shape after encoding: {X_encoded.shape[0]} rows × {X_encoded.shape[1]} columns")
-    
-    X = X_encoded
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
+
+    st.caption(f"X shape after encoding: {X.shape[0]} rows × {X.shape[1]} columns")
+
+    # -----------------------------
+    # 4) Train/Test + Model
+    # -----------------------------
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
     model = LinearRegression()
     model.fit(X_train, y_train)
@@ -297,12 +313,18 @@ else:
     c1.metric("MAE (minutes)", f"{mae:.2f}")
     c2.metric("R²", f"{r2:.3f}")
 
-    st.subheader("Coefficients (how each feature affects prediction)")
-    coef_df = pd.DataFrame({"feature": feature_cols, "coefficient": model.coef_})
+    # -----------------------------
+    # 5) Coefficients (for encoded columns)
+    # -----------------------------
+    st.subheader("Coefficients (encoded features)")
+    coef_df = pd.DataFrame({"feature": X.columns, "coefficient": model.coef_})
     st.dataframe(coef_df)
 
+    # -----------------------------
+    # 6) Actual vs Predicted
+    # -----------------------------
     st.subheader("Actual vs Predicted")
-    max_points = st.slider("Max points to plot", 2000, 50000, 20000, step=2000)
+    max_points = st.slider("Max points to plot", 2000, 50000, 20000, step=2000, key="pred_plot_points")
 
     y_test_arr = np.array(y_test)
     y_pred_arr = np.array(y_pred)
@@ -325,41 +347,43 @@ else:
     plt.ylabel("Actual")
     st.pyplot(fig)
 
+    # -----------------------------
+    # 7) Try your own inputs (works with text columns too)
+    # -----------------------------
     st.subheader("Try your own inputs")
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
 
-    with col1:
-        arrival_delay = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0)
-    with col2:
-        dwell = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0)
-    with col3:
-        category = st.number_input("category (1-7)", 1, 7, 3)
-    with col4:
-        hour = st.number_input("hour (0-23)", 0, 23, 8)
+    # Build input UI based on what user selected
+    input_data = {}
 
-    col5, col6 = st.columns(2)
-    with col5:
-        line = st.number_input("line", 0, 5000, 1)
-    with col6:
-        day_of_week = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
+    for col in features_selection:
+        if col in ["station", "state", "city", "info"]:
+            input_data[col] = st.text_input(f"{col}", value="")
+        elif col in ["is_peak", "arrival_delay_flag"]:
+            input_data[col] = st.number_input(f"{col} (0/1)", 0, 1, 0)
+        elif col == "category":
+            input_data[col] = st.number_input("category (1-7)", 1, 7, 3)
+        elif col == "hour":
+            input_data[col] = st.number_input("hour (0-23)", 0, 23, 8)
+        elif col == "day_of_week":
+            input_data[col] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
+        elif col == "planned_dwell_m":
+            input_data[col] = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0)
+        elif col == "arrival_delay_m":
+            input_data[col] = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0)
+        elif col == "line":
+            input_data[col] = st.number_input("line", 0, 5000, 1)
+        else:
+            # fallback numeric input
+            input_data[col] = st.number_input(f"{col}", value=0.0)
 
-    col7, col8 = st.columns(2)
-    with col7:
-        is_peak = st.number_input("is_peak (0/1)", 0, 1, 0)
-    with col8:
-        arrival_delay_flag = st.number_input("arrival_delay_flag (0/1)", 0, 1, 0)
+    # Convert one-row input into DataFrame
+    new_X_raw = pd.DataFrame([input_data])
 
-    new_X = pd.DataFrame([{
-        "arrival_delay_m": arrival_delay,
-        "planned_dwell_m": dwell,
-        "category": category,
-        "hour": hour,
-        "line": line,
-        "day_of_week": day_of_week,
-        "is_peak": is_peak,
-        "arrival_delay_flag": arrival_delay_flag
-    }])
+    # Apply SAME encoding as training
+    new_X = pd.get_dummies(new_X_raw, columns=text_cols, drop_first=True)
+
+    # Ensure same columns as training X (missing dummy cols become 0)
+    new_X = new_X.reindex(columns=X.columns, fill_value=0)
 
     pred_one = model.predict(new_X)[0]
     st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
