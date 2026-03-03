@@ -236,31 +236,72 @@ elif page == "02 Data Visualization":
 # =========================
 # Page 03: Prediction (Route 2, simplified & stable)
 # =========================
+# Page 03: Prediction
 else:
-    st.subheader("Train Linear Regression model")
-    
-    # Train/test split
+    st.subheader("Train Linear Regression Model (Route 2)")
+
+    # -----------------------------
+    # 固定参数（不显示 slider）
+    # -----------------------------
+    TRAIN_MAX = 50000
+
+    # 使用 10 个变量（包含文本变量）
+    feature_cols = [
+        "arrival_delay_m",
+        "planned_dwell_m",
+        "category",
+        "hour",
+        "day_of_week",
+        "is_peak",
+        "station",
+        "state",
+        "city",
+        "info",
+    ]
+    feature_cols = [c for c in feature_cols if c in df.columns]
+
+    model_df = df[feature_cols + ["departure_delay_m"]].copy()
+
+    # 限制训练数据行数（加快速度）
+    if len(model_df) > TRAIN_MAX:
+        model_df = model_df.sample(TRAIN_MAX, random_state=42)
+
+    y = model_df["departure_delay_m"]
+    X_raw = model_df[feature_cols].copy()
+
+    # 文本列自动 one-hot 编码
+    text_cols = X_raw.select_dtypes(include="object").columns.tolist()
+    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
+
+    st.caption(
+        f"Training rows: {len(X):,} | Encoded columns: {X.shape[1]:,}"
+    )
+
+    # -----------------------------
+    # 训练模型
+    # -----------------------------
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
-    # Model
     model = LinearRegression()
     model.fit(X_train, y_train)
+
     y_pred = model.predict(X_test)
 
-    # Metrics
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    c1, c2 = st.columns(2)
-    c1.metric("MAE (minutes)", f"{mae:.2f}")
-    c2.metric("R²", f"{r2:.3f}")
+    col1, col2 = st.columns(2)
+    col1.metric("MAE (minutes)", f"{mae:.2f}")
+    col2.metric("R²", f"{r2:.3f}")
 
+    # -----------------------------
+    # Actual vs Predicted
+    # -----------------------------
+    st.subheader("Actual vs Predicted")
 
-    # ---- Actual vs Predicted plot (like your example) ----
-    st.subheader("Actual vs Predicted (departure_delay_m)")
-    max_points = min(20000, len(y_test))  # fixed, no slider
+    max_points = min(20000, len(y_test))
 
     y_test_arr = np.array(y_test)
     y_pred_arr = np.array(y_pred)
@@ -275,43 +316,52 @@ else:
 
     fig = plt.figure(figsize=(10, 6))
     plt.scatter(p_plot, y_plot, s=10, alpha=0.3)
+
     mn = min(p_plot.min(), y_plot.min())
     mx = max(p_plot.max(), y_plot.max())
+
     plt.plot([mn, mx], [mn, mx], "r--", linewidth=3)
-    plt.title("Actual vs Predicted (departure_delay_m)")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
+    plt.title("Actual vs Predicted (departure_delay_m)")
+
     st.pyplot(fig)
 
-    # ---- Simple "Try your own inputs" (works for text too) ----
-    st.subheader("Try your own inputs")
+    # -----------------------------
+    # 用户输入预测（只保留数值变量）
+    # -----------------------------
+    st.subheader("Try Your Own Inputs")
 
     input_data = {}
 
-    # numeric inputs
     if "arrival_delay_m" in feature_cols:
         input_data["arrival_delay_m"] = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0)
+
     if "planned_dwell_m" in feature_cols:
         input_data["planned_dwell_m"] = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0)
+
     if "category" in feature_cols:
         input_data["category"] = st.number_input("category (1-7)", 1, 7, 3)
+
     if "hour" in feature_cols:
         input_data["hour"] = st.number_input("hour (0-23)", 0, 23, 8)
+
     if "day_of_week" in feature_cols:
         input_data["day_of_week"] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
+
     if "is_peak" in feature_cols:
         input_data["is_peak"] = st.number_input("is_peak (0/1)", 0, 1, 0)
 
+    # 对于文本列，自动设为空（不会报错）
+    for col in text_cols:
+        input_data[col] = ""
+
     new_X_raw = pd.DataFrame([input_data])
-
-    # Apply SAME Top-K rule to new input
-    for c in text_cols:
-        new_X_raw[c] = limit_top_k(new_X_raw[c], TOP_K)
-
     new_X = pd.get_dummies(new_X_raw, columns=text_cols, drop_first=True)
 
-    # Align columns with training X
+    # 对齐训练列
     new_X = new_X.reindex(columns=X.columns, fill_value=0)
 
     pred_one = model.predict(new_X)[0]
-    st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
+
+    st.success(f"Predicted departure_delay_m: {pred_one:.1f} minutes")
