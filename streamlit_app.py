@@ -26,7 +26,7 @@ if not os.path.exists(DATA_FILE):
         f.write(r.content)
 
 raw = pd.read_csv(DATA_FILE)
-df = clean_data(raw)
+
 def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2 = raw_df.copy()
 
@@ -101,7 +101,8 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
             df[c] = df[c].astype(str).fillna("").str.strip()
 
     return df
-
+    
+df = clean_data(raw)
 # Sidebar navigation
 st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
