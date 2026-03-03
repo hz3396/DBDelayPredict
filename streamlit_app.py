@@ -184,8 +184,6 @@ We use that information to predict how late the train will depart.
 
 
 
-# Page 02: Data Visualization
-elif page == "02 Data Visualization":
     st.image("02.jpg", width=1500)
 
     # Chart 1: Histogram of departure delays, filtered to 1 to 20 minutes
@@ -229,27 +227,8 @@ elif page == "02 Data Visualization":
     ax.set_ylabel("State")
     st.pyplot(fig)
 
-    # Chart 5: Bar chart of the top 10 train lines with the worst average delays
-    st.subheader("5) Top 10 Lines with Highest Avg Departure Delay")
-    st.markdown("This chart lists the 10 train lines that have the highest average departure delay. The longer the bar, the worse the average delay for that line. It is useful for identifying the most problematic routes in the network.")
-    line_delay = df.groupby("line")["departure_delay_m"].mean().sort_values(ascending=False).head(10)
-    fig, ax = plt.subplots(figsize=(10, 5))
-    sns.barplot(x=line_delay.values, y=line_delay.index.astype(str), palette="magma", ax=ax)
-    ax.set_xlabel("Average Departure Delay (min)")
-    ax.set_ylabel("Line")
-    st.pyplot(fig)
-
-    # Chart 6: Boxplot showing the spread of delays for each train category
-    st.subheader("6) Departure Delay by Category")
-    st.markdown("Each box represents a train category. The box itself covers the middle 50% of delay values, and the line inside the box is the median. The dots outside are outliers. This lets you compare which category of trains tends to have bigger or smaller delays.")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    sns.boxplot(data=df[df["departure_delay_m"] <= 20], x="category", y="departure_delay_m", palette="Set2", ax=ax)
-    ax.set_xlabel("Category")
-    ax.set_ylabel("Departure Delay (min)")
-    st.pyplot(fig)
-
-    # Chart 7: Bar chart showing train volume per state
-    st.subheader("7) Number of Trains by State")
+    # Chart 5: Bar chart showing train volume per state
+    st.subheader("5) Number of Trains by State")
     st.markdown("This chart shows how many trains operate in each German state. States with longer bars have more train traffic. Keep in mind that states with higher train volume might naturally have more total delays simply because there are more trains running.")
     state_counts = df["state"].value_counts()
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -257,8 +236,9 @@ elif page == "02 Data Visualization":
     ax.set_xlabel("Number of Trains")
     ax.set_ylabel("State")
     st.pyplot(fig)
-        # Chart 3: Scatter plot comparing planned dwell time and departure delay
-    st.subheader("8) Planned Dwell Time vs Departure Delay")
+
+    # Chart 6: Scatter plot comparing planned dwell time and departure delay
+    st.subheader("6) Planned Dwell Time vs Departure Delay")
     st.markdown("Each dot represents a train. The x axis is the planned dwell time at the station and the y axis is the departure delay. This helps us see whether trains with shorter or longer planned stops tend to have more delays.")
     fig = plt.figure(figsize=(7, 4))
     plt.scatter(df["planned_dwell_m"], df["departure_delay_m"], s=8, alpha=0.3)
@@ -266,14 +246,13 @@ elif page == "02 Data Visualization":
     plt.ylabel("departure_delay_m (minutes)")
     st.pyplot(fig, use_container_width=False)
 
-    # Chart 4: Correlation heatmap of all numeric variables
-    st.subheader("9) Correlation Heatmap (Target + Features)")
+    # Chart 7: Correlation heatmap of all numeric variables
+    st.subheader("7) Correlation Heatmap (Target + Features)")
     st.markdown("This heatmap shows the correlation between all numeric variables. Values close to 1 or negative 1 mean a strong relationship, while values close to 0 mean almost no relationship. The color makes it easy to spot which variables are most related to each other.")
     fig = plt.figure(figsize=(8, 5))
-    corr = df.corr()
+    corr = df.select_dtypes(include="number").corr()
     sns.heatmap(corr, annot=True, fmt=".2f")
     st.pyplot(fig, use_container_width=False)
-
 
 
 # =========================
