@@ -257,6 +257,23 @@ elif page == "02 Data Visualization":
     ax.set_xlabel("Number of Trains")
     ax.set_ylabel("State")
     st.pyplot(fig)
+        # Chart 3: Scatter plot comparing planned dwell time and departure delay
+    st.subheader("8) Planned Dwell Time vs Departure Delay")
+    st.markdown("Each dot represents a train. The x axis is the planned dwell time at the station and the y axis is the departure delay. This helps us see whether trains with shorter or longer planned stops tend to have more delays.")
+    fig = plt.figure(figsize=(7, 4))
+    plt.scatter(df["planned_dwell_m"], df["departure_delay_m"], s=8, alpha=0.3)
+    plt.xlabel("planned_dwell_m (minutes)")
+    plt.ylabel("departure_delay_m (minutes)")
+    st.pyplot(fig, use_container_width=False)
+
+    # Chart 4: Correlation heatmap of all numeric variables
+    st.subheader("9) Correlation Heatmap (Target + Features)")
+    st.markdown("This heatmap shows the correlation between all numeric variables. Values close to 1 or negative 1 mean a strong relationship, while values close to 0 mean almost no relationship. The color makes it easy to spot which variables are most related to each other.")
+    fig = plt.figure(figsize=(8, 5))
+    corr = df.corr()
+    sns.heatmap(corr, annot=True, fmt=".2f")
+    st.pyplot(fig, use_container_width=False)
+
 
 
 # =========================
