@@ -251,41 +251,24 @@ else:
         "info",
     ]
 
-    # Keep only features that exist in df
-    candidate_features = [c for c in candidate_features if c in df.columns]
-
-    # Target
-    y = df["departure_delay_m"]
-
-    # -----------------------------
-    # 2) Feature selection (uses candidate_features)
-    # -----------------------------
-    default_features = [
-        "arrival_delay_m",
-        "planned_dwell_m",
-        "category",
-        "hour",
-        "line",
-        "day_of_week",
-        "is_peak",
-        "arrival_delay_flag",
-    ]
-    default_features = [c for c in default_features if c in candidate_features]
-
-    features_selection = st.multiselect(
-        "Choose X variables",
-        candidate_features,
-        default=default_features if len(default_features) > 0 else candidate_features
-    )
-
-    if len(features_selection) == 0:
-        st.error("Please select at least 1 feature.")
-        st.stop()
-
-    # -----------------------------
-    # 3) Build X and encode text (still uses selected features)
-    # -----------------------------
+    # Always use ALL 12 variables (no user selection)
+    features_selection = candidate_features
+    
+    # Build X
     X_raw = df[features_selection].copy()
+    
+    # Encode text columns into numbers
+    text_cols = ["station", "state", "city", "info"]
+    text_cols = [c for c in text_cols if c in X_raw.columns]
+    
+    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
+    
+    # Safety check
+    if X.shape[1] == 0:
+        st.error("X has 0 columns after encoding. Something is wrong with selected features.")
+        st.stop()
+    
+    st.caption(f"Using ALL features. X shape after encoding: {X.shape[0]} rows × {X.shape[1]} columns")
 
     text_cols = ["station", "state", "city", "info"]
     text_cols = [c for c in text_cols if c in X_raw.columns]
