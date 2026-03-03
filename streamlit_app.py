@@ -132,14 +132,18 @@ We use that information to predict how late the train will depart.
     rows = st.slider("Select a number of rows to display", 5, 100, 20)
     view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
 
-    if view == "Head":
-        st.dataframe(df.head(rows))
-    elif view == "Tail":
-        st.dataframe(df.tail(rows))
-    elif view == "Random":
-        st.dataframe(df.sample(n=rows))
+    rows = st.slider("Select a number of rows to display", 5, 100, 20)
+    view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
     
-    st.caption(f"This data frame has {df.shape[0]} rows and {df.shape[1]} columns.")
+    if view == "Head":
+        st.dataframe(raw.head(rows), use_container_width=True)
+    elif view == "Tail":
+        st.dataframe(raw.tail(rows), use_container_width=True)
+    elif view == "Random":
+        st.dataframe(raw.sample(n=rows), use_container_width=True)
+    
+    st.caption(f"This RAW data frame has {raw.shape[0]} rows and {raw.shape[1]} columns.")
+    
 
     # ------------------------------
     # ❗ MISSING VALUES
