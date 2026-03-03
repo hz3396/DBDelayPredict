@@ -25,7 +25,7 @@ if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, "wb") as f:
         f.write(r.content)
 
-raw = pd.read_csv(DATA_FILE)
+raw = pd.read_csv(DATA_FILE, na_values=["None", "none", "NULL", "null", "NaN", "nan", ""])
 
 def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2 = raw_df.copy()
