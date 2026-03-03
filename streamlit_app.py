@@ -237,66 +237,8 @@ elif page == "02 Data Visualization":
 # Page 03: Prediction (Route 2, simplified & stable)
 # =========================
 else:
-    st.subheader("Train Linear Regression model (Route 2: includes station/state/city/info)")
-
-    # ---- Fixed settings (NO sliders, simple for intro class) ----
-    TOP_K = 60          # keep top 60 categories for each text column, others -> "Other"
-    TRAIN_MAX = 50000   # train on at most 50k rows for speed (fixed, not shown)
-
-    # 10 variables (>=8 variables requirement)
-    feature_cols = [
-        "arrival_delay_m",
-        "planned_dwell_m",
-        "category",
-        "hour",
-        "day_of_week",
-        "is_peak",
-        "station",
-        "state",
-        "city",
-        "info",
-    ]
-    feature_cols = [c for c in feature_cols if c in df.columns]
-
-    # Safety: must have target + features
-    if "departure_delay_m" not in df.columns:
-        st.error("Missing target column: departure_delay_m")
-        st.stop()
-
-    # ---- helper: limit text categories (avoid huge dummy columns) ----
-    def limit_top_k(series: pd.Series, k: int) -> pd.Series:
-        s = series.fillna("").astype(str).str.strip()
-        top = s.value_counts().head(k).index
-        return s.where(s.isin(top), other="Other")
-
-    # Build modeling table
-    model_df = df[feature_cols + ["departure_delay_m"]].copy()
-
-    # Apply Top-K to text columns
-    text_cols = [c for c in ["station", "state", "city", "info"] if c in model_df.columns]
-    for c in text_cols:
-        model_df[c] = limit_top_k(model_df[c], TOP_K)
-
-    # Train sample for speed (fixed, simple)
-    if len(model_df) > TRAIN_MAX:
-        model_df = model_df.sample(TRAIN_MAX, random_state=42)
-
-    # X / y
-    y = model_df["departure_delay_m"]
-    X_raw = model_df[feature_cols].copy()
-
-    # One-hot encode text columns
-    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
-
-    if X.shape[1] == 0:
-        st.error("X has 0 columns after encoding. Please check selected features.")
-        st.stop()
-
-    st.caption(
-        f"Using {len(feature_cols)} original variables (text variables are one-hot encoded). "
-        f"Training rows: {len(X):,} | Encoded columns: {X.shape[1]:,}"
-    )
-
+    st.subheader("Train Linear Regression model")
+    
     # Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
@@ -315,12 +257,6 @@ else:
     c1.metric("MAE (minutes)", f"{mae:.2f}")
     c2.metric("R²", f"{r2:.3f}")
 
-    # ---- Coefficients: show only Top 20 (otherwise too messy) ----
-    st.subheader("Top coefficients (encoded features)")
-    coef_df = pd.DataFrame({"feature": X.columns, "coefficient": model.coef_})
-    coef_df["abs_coef"] = coef_df["coefficient"].abs()
-    coef_df = coef_df.sort_values("abs_coef", ascending=False).drop(columns=["abs_coef"]).head(20)
-    st.dataframe(coef_df, width="stretch")
 
     # ---- Actual vs Predicted plot (like your example) ----
     st.subheader("Actual vs Predicted (departure_delay_m)")
@@ -365,16 +301,6 @@ else:
         input_data["day_of_week"] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
     if "is_peak" in feature_cols:
         input_data["is_peak"] = st.number_input("is_peak (0/1)", 0, 1, 0)
-
-    # text inputs (will be Top-K limited; unknown -> Other)
-    if "station" in feature_cols:
-        input_data["station"] = st.text_input("station (optional)", value="")
-    if "state" in feature_cols:
-        input_data["state"] = st.text_input("state (optional)", value="")
-    if "city" in feature_cols:
-        input_data["city"] = st.text_input("city (optional)", value="")
-    if "info" in feature_cols:
-        input_data["info"] = st.text_input("info (optional)", value="")
 
     new_X_raw = pd.DataFrame([input_data])
 
