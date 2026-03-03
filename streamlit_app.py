@@ -219,8 +219,8 @@ elif page == "02 Data Visualization":
     st.pyplot(fig)
 
     # Chart 4: Bar chart ranking states by delay rate percentage
-    st.subheader("4) Delay Rate by State")
-    st.markdown("Each bar represents a German state, and the length shows its delay rate as a percentage. States at the top have the highest delay rates. This helps you compare which regions are more likely to experience train delays.")
+    st.subheader("4) Departure Delay Rate by State")
+    st.markdown("Each bar represents a German state, and the length shows its departure delay rate as a percentage. States at the top have the highest delay rates. This helps you compare which regions are more likely to experience train delays.")
     state_delay = df.groupby("state")["departure_delay_m"].apply(lambda x: (x > 0).mean() * 100).sort_values(ascending=False)
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_delay.values, y=state_delay.index, palette="Reds_r", ax=ax)
