@@ -141,26 +141,25 @@ We use that information to predict how late the train will depart.
     
     st.caption(f"This RAW data frame has {raw.shape[0]} rows and {raw.shape[1]} columns.")
     
-
     # ------------------------------
     # ❗ MISSING VALUES
     # ------------------------------
     st.markdown("##### Missing values")
 
-    missing = df.isnull().sum()
-    total_cells = df.shape[0] * df.shape[1]
+    missing = raw.isnull().sum()
+    total_cells = raw.shape[0] * raw.shape[1]
     total_missing = missing.sum()
     missing_pct = (total_missing / total_cells) * 100
-
+    
     st.write(missing)
-    st.markdown(f"**Percentage of total missing values:** {missing_pct:.1f} %")
-
+    st.markdown(f"**Percentage of total missing values (raw data):** {missing_pct:.1f} %")
+    
     if missing_pct < 1:
-        st.success("✅ Missing values are extremely low. The data is safe to use.")
+        st.success("✅ Missing values are extremely low in the raw data.")
     elif 1 <= missing_pct <= 5:
-        st.warning("⚠️ You have missing data. Please double check before proceeding.")
+        st.warning("⚠️ Some missing data exists in the raw dataset.")
     else:
-        st.error("🚨 You have a higher percentage of missing data. Please double check.")
+        st.error("🚨 High percentage of missing data in the raw dataset.")
 
     # ------------------------------
     # 📈 SUMMARY STATISTICS
