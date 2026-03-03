@@ -94,6 +94,48 @@ We use that information to predict how late the train will depart.
     # Dataset info
     st.subheader("Dataset Information")
 
+    # 📊 DATA PREVIEW
+    # ------------------------------
+    st.markdown("##### Data Preview")
+
+    rows = st.slider("Select a number of rows to display", 5, 100, 20)
+    view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
+
+    if view == "Head":
+        st.dataframe(df.head(rows))
+    elif view == "Tail":
+        st.dataframe(df.tail(rows))
+    elif view == "Random":
+        st.dataframe(df.sample(n=rows))
+
+    st.caption(f"This data frame has {df.shape[0]} rows and {df.shape[1]} columns.")
+
+    # ------------------------------
+    # ❗ MISSING VALUES
+    # ------------------------------
+    st.markdown("##### Missing values")
+
+    missing = df.isnull().sum()
+    total_cells = df.shape[0] * df.shape[1]
+    total_missing = missing.sum()
+    missing_pct = (total_missing / total_cells) * 100
+
+    st.write(missing)
+    st.markdown(f"**Percentage of total missing values:** {missing_pct:.1f} %")
+
+    if missing_pct < 1:
+        st.success("✅ Missing values are extremely low. The data is safe to use.")
+    elif 1 <= missing_pct <= 5:
+        st.warning("⚠️ You have missing data. Please double check before proceeding.")
+    else:
+        st.error("🚨 You have a higher percentage of missing data. Please double check.")
+
+    # ------------------------------
+    # 📈 SUMMARY STATISTICS
+    # ------------------------------
+    st.markdown("##### 📈 Summary Statistics")
+    st.dataframe(df.describe())
+    
     col1, col2, col3 = st.columns(3)
     col1.metric("Total rows (raw)", f"{len(raw):,}")
     col2.metric("Rows used (cleaned)", f"{len(df):,}")
