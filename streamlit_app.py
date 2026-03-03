@@ -324,23 +324,24 @@ else:
 
     st.subheader("Try your own inputs")
 
-    col1, col2 = st.columns(2)
-    col3, col4 = st.columns(2)
+    arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))# Row 1
+        # Row 1
+    col1, col2, col3 = st.columns(3)
     with col1:
-        arrival_delay = st.slider("arrival_delay_m (0-180)",min_value=0.0,max_value=180.0,value=5.0,key="inp_arrival_delay")
+        arrival_delay = st.slider("arrival_delay_m (0-180)", 0.0, 180.0, 5.0, key="inp_arrival_delay")
     with col2:
-        dwell = st.slider("planned_dwell_m (0-60)",min_value=0.0,max_value=60.0,value=2.0,key="inp_dwell")
+        dwell = st.slider("planned_dwell_m (0-60)", 0.0, 60.0, 2.0, key="inp_dwell")
     with col3:
-        category = st.slider("category (1-7)",min_value=1,max_value=7,value=3,key="inp_category")
+        category = st.slider("category (1-7)", 1, 7, 3, key="inp_category")
+    
+    # Row 2
+    col4, col5, col6 = st.columns(3)
     with col4:
-        day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)",min_value=0,max_value=6,value=1,key="inp_day_of_week")
-    
-    col7, col8 = st.columns(2)
-    with col7:
-        is_peak = int(st.toggle("Is Peak Hour?", key="inp_is_peak"))
-    
-    with col8:
-        arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
+        hour = st.slider("hour (0-23)", 0, 23, 8, key="inp_hour")
+    with col5:
+        day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1, key="inp_day_of_week")
+    with col6:
+        line = st.slider("line (choose range)", 0, 10, 0, key="inp_line")  # <-- adjust to your real line encoding/range
     
     new_X = pd.DataFrame([{   
         "arrival_delay_m": arrival_delay,
