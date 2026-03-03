@@ -131,9 +131,6 @@ We use that information to predict how late the train will depart.
 
     rows = st.slider("Select a number of rows to display", 5, 100, 20)
     view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
-
-    rows = st.slider("Select a number of rows to display", 5, 100, 20)
-    view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
     
     if view == "Head":
         st.dataframe(raw.head(rows), use_container_width=True)
