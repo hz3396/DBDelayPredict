@@ -144,15 +144,34 @@ We use that information to predict how late the train will depart.
     # ------------------------------
     # ❗ MISSING VALUES
     # ------------------------------
-    st.markdown("##### Missing values")
+    st.markdown("##### Missing values (raw data)")
 
-    missing = raw.isnull().sum()
+    # 1) Standard missing (NaN)
+    missing_nan = raw.isnull().sum()
+    
+    # 2) "Blank" strings in text columns (counts "" or "   ")
+    obj_cols = raw.select_dtypes(include="object").columns
+    missing_blank = pd.Series(0, index=raw.columns)
+    
+    for c in obj_cols:
+        missing_blank[c] = raw[c].astype(str).str.strip().eq("").sum()
+    
+    missing_total = missing_nan + missing_blank
+    
     total_cells = raw.shape[0] * raw.shape[1]
-    total_missing = missing.sum()
+    total_missing = int(missing_total.sum())
     missing_pct = (total_missing / total_cells) * 100
     
-    st.write(missing)
-    st.markdown(f"**Percentage of total missing values (raw data):** {missing_pct:.1f} %")
+    st.write("NaN missing values by column:")
+    st.dataframe(missing_nan)
+    
+    st.write("Blank-string missing values by column (text columns):")
+    st.dataframe(missing_blank[missing_blank > 0])
+    
+    st.write("Total missing (NaN + blanks) by column:")
+    st.dataframe(missing_total[missing_total > 0])
+    
+    st.markdown(f"**Percentage of total missing values (NaN + blanks):** {missing_pct:.1f} %")
     
     if missing_pct < 1:
         st.success("✅ Missing values are extremely low in the raw data.")
