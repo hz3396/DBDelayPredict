@@ -324,8 +324,14 @@ else:
 
     st.subheader("Try your own inputs")
 
-    arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))# Row 1
-        # Row 1
+    # Binary toggles (0/1)
+    colT1, colT2 = st.columns(2)
+    with colT1:
+        is_peak = int(st.toggle("Is Peak Hour?", key="inp_is_peak"))
+    with colT2:
+        arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
+    
+    # Row 1
     col1, col2, col3 = st.columns(3)
     with col1:
         arrival_delay = st.slider("arrival_delay_m (0-180)", 0.0, 180.0, 5.0, key="inp_arrival_delay")
@@ -341,16 +347,22 @@ else:
     with col5:
         day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1, key="inp_day_of_week")
     with col6:
-        line = st.slider("line (choose range)", 0, 10, 0, key="inp_line")  # <-- adjust to your real line encoding/range
+        line = st.slider("line", 0, 10, 0, key="inp_line")  # adjust to your true encoding
     
-    new_X = pd.DataFrame([{   
+    # Build input row with ALL features
+    new_X = pd.DataFrame([{
         "arrival_delay_m": arrival_delay,
         "planned_dwell_m": dwell,
         "category": category,
         "hour": hour,
+        "line": line,
         "day_of_week": day_of_week,
+        "is_peak": is_peak,
         "arrival_delay_flag": arrival_delay_flag,
     }])
-
+    
+    # IMPORTANT: enforce same column order as training
+    new_X = new_X[feature_cols]
+    
     pred_one = model.predict(new_X)[0]
     st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
