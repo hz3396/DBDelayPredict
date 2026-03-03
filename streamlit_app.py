@@ -235,51 +235,23 @@ elif page == "02 Data Visualization":
 
 # =========================
 # Page 03: Prediction (Route 2, simplified & stable)
-# =========================
-# Page 03: Prediction
 else:
-    st.subheader("Train Linear Regression Model (Route 2)")
+    st.subheader("Train Linear Regression model")
 
-    # -----------------------------
-    # 固定参数（不显示 slider）
-    # -----------------------------
-    TRAIN_MAX = 50000
-
-    # 使用 10 个变量（包含文本变量）
     feature_cols = [
         "arrival_delay_m",
         "planned_dwell_m",
         "category",
         "hour",
+        "line",
         "day_of_week",
         "is_peak",
-        "station",
-        "state",
-        "city",
-        "info",
+        "arrival_delay_flag",
     ]
-    feature_cols = [c for c in feature_cols if c in df.columns]
 
-    model_df = df[feature_cols + ["departure_delay_m"]].copy()
+    X = df[feature_cols]
+    y = df["departure_delay_m"]
 
-    # 限制训练数据行数（加快速度）
-    if len(model_df) > TRAIN_MAX:
-        model_df = model_df.sample(TRAIN_MAX, random_state=42)
-
-    y = model_df["departure_delay_m"]
-    X_raw = model_df[feature_cols].copy()
-
-    # 文本列自动 one-hot 编码
-    text_cols = X_raw.select_dtypes(include="object").columns.tolist()
-    X = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
-
-    st.caption(
-        f"Training rows: {len(X):,} | Encoded columns: {X.shape[1]:,}"
-    )
-
-    # -----------------------------
-    # 训练模型
-    # -----------------------------
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
@@ -292,16 +264,18 @@ else:
     mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    col1, col2 = st.columns(2)
-    col1.metric("MAE (minutes)", f"{mae:.2f}")
-    col2.metric("R²", f"{r2:.3f}")
+    c1, c2 = st.columns(2)
+    c1.metric("MAE (minutes)", f"{mae:.2f}")
+    c2.metric("R²", f"{r2:.3f}")
 
-    # -----------------------------
-    # Actual vs Predicted
-    # -----------------------------
+    st.subheader("Coefficients (how each feature affects prediction)")
+    coef_df = pd.DataFrame({"feature": feature_cols, "coefficient": model.coef_})
+    st.dataframe(coef_df)
+
     st.subheader("Actual vs Predicted")
-
-    max_points = min(20000, len(y_test))
+    max_points = st.slider(
+        "Max points to plot", 2000, 50000, 20000, step=2000, key="max_points_plot"
+    )
 
     y_test_arr = np.array(y_test)
     y_pred_arr = np.array(y_pred)
@@ -316,52 +290,50 @@ else:
 
     fig = plt.figure(figsize=(10, 6))
     plt.scatter(p_plot, y_plot, s=10, alpha=0.3)
-
     mn = min(p_plot.min(), y_plot.min())
     mx = max(p_plot.max(), y_plot.max())
-
     plt.plot([mn, mx], [mn, mx], "r--", linewidth=3)
+    plt.title("Actual vs Predicted (departure_delay_m)")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
-    plt.title("Actual vs Predicted (departure_delay_m)")
-
     st.pyplot(fig)
 
-    # -----------------------------
-    # 用户输入预测（只保留数值变量）
-    # -----------------------------
-    st.subheader("Try Your Own Inputs")
+    st.subheader("Try your own inputs")
 
-    input_data = {}
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
 
-    if "arrival_delay_m" in feature_cols:
-        input_data["arrival_delay_m"] = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0)
+    with col1:
+        arrival_delay = st.number_input("arrival_delay_m (0-180)", 0.0, 180.0, 5.0, key="inp_arrival_delay")
+    with col2:
+        dwell = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0, key="inp_dwell")
+    with col3:
+        category = st.number_input("category (1-7)", 1, 7, 3, key="inp_category")
+    with col4:
+        hour = st.number_input("hour (0-23)", 0, 23, 8, key="inp_hour")
 
-    if "planned_dwell_m" in feature_cols:
-        input_data["planned_dwell_m"] = st.number_input("planned_dwell_m (0-60)", 0.0, 60.0, 2.0)
+    col5, col6 = st.columns(2)
+    with col5:
+        line = st.number_input("line", 0, 5000, 1, key="inp_line")
+    with col6:
+        day_of_week = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1, key="inp_day_of_week")
 
-    if "category" in feature_cols:
-        input_data["category"] = st.number_input("category (1-7)", 1, 7, 3)
+    col7, col8 = st.columns(2)
+    with col7:
+        is_peak = st.number_input("is_peak (0/1)", 0, 1, 0, key="inp_is_peak")
+    with col8:
+        arrival_delay_flag = st.number_input("arrival_delay_flag (0/1)", 0, 1, 0, key="inp_arrival_delay_flag")
 
-    if "hour" in feature_cols:
-        input_data["hour"] = st.number_input("hour (0-23)", 0, 23, 8)
-
-    if "day_of_week" in feature_cols:
-        input_data["day_of_week"] = st.number_input("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1)
-
-    if "is_peak" in feature_cols:
-        input_data["is_peak"] = st.number_input("is_peak (0/1)", 0, 1, 0)
-
-    # 对于文本列，自动设为空（不会报错）
-    for col in text_cols:
-        input_data[col] = ""
-
-    new_X_raw = pd.DataFrame([input_data])
-    new_X = pd.get_dummies(new_X_raw, columns=text_cols, drop_first=True)
-
-    # 对齐训练列
-    new_X = new_X.reindex(columns=X.columns, fill_value=0)
+    new_X = pd.DataFrame([{
+        "arrival_delay_m": arrival_delay,
+        "planned_dwell_m": dwell,
+        "category": category,
+        "hour": hour,
+        "line": line,
+        "day_of_week": day_of_week,
+        "is_peak": is_peak,
+        "arrival_delay_flag": arrival_delay_flag,
+    }])
 
     pred_one = model.predict(new_X)[0]
-
-    st.success(f"Predicted departure_delay_m: {pred_one:.1f} minutes")
+    st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
