@@ -348,9 +348,7 @@ else:
         "planned_dwell_m": dwell,
         "category": category,
         "hour": hour,
-        "line": line,
         "day_of_week": day_of_week,
-        "is_peak": is_peak,
         "arrival_delay_flag": arrival_delay_flag,
     }])
 
