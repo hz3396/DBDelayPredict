@@ -333,10 +333,6 @@ else:
     with col3:
         category = st.slider("category (1-7)",min_value=1,max_value=7,value=3,key="inp_category")
     with col4:
-        hour = st.slider("hour (0-23)",min_value=0,max_value=23,value=8,key="inp_hour")
-    
-    col6 = st.columns(2)
-    with col6:
         day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)",min_value=0,max_value=6,value=1,key="inp_day_of_week")
     
     col7, col8 = st.columns(2)
