@@ -229,8 +229,11 @@ elif page == "02 Data Visualization":
 # Page 03: Prediction
 else:
     st.subheader("Train Linear Regression model")
-
-    feature_cols = [
+    # Target
+    y = df["departure_delay_m"]
+    
+    # All choosable X columns (your list)
+    candidate_features = [
         "arrival_delay_m",
         "planned_dwell_m",
         "category",
@@ -239,10 +242,46 @@ else:
         "day_of_week",
         "is_peak",
         "arrival_delay_flag",
+        "station",
+        "state",
+        "city",
+        "info",
     ]
-
-    X = df[feature_cols]
-    y = df["departure_delay_m"]
+    
+    # Keep only features that exist in df (prevents KeyError)
+    candidate_features = [c for c in candidate_features if c in df.columns]
+    
+    features_selection = st.multiselect(
+        "Choose X variables",
+        candidate_features,
+        default=[
+            "arrival_delay_m",
+            "planned_dwell_m",
+            "category",
+            "hour",
+            "line",
+            "day_of_week",
+            "is_peak",
+            "arrival_delay_flag",
+        ]
+    )
+    
+    if len(features_selection) == 0:
+        st.error("Please select at least 1 feature.")
+        st.stop()
+    
+    # Build X
+    X_raw = df[features_selection].copy()
+    
+    # Encode text columns (station/state/city/info) into numbers
+    text_cols = ["station", "state", "city", "info"]
+    text_cols = [c for c in text_cols if c in X_raw.columns]
+    
+    X_encoded = pd.get_dummies(X_raw, columns=text_cols, drop_first=True)
+    
+    st.caption(f"X shape after encoding: {X_encoded.shape[0]} rows × {X_encoded.shape[1]} columns")
+    
+    X = X_encoded
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
