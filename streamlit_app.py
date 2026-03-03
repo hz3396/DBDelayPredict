@@ -133,11 +133,11 @@ We use that information to predict how late the train will depart.
     view = st.radio("View from top, bottom, or randomized", ["Head", "Tail", "Random"])
     
     if view == "Head":
-        st.dataframe(raw.head(rows), use_container_width=True)
+        st.dataframe(raw.head(rows), width="stretch")
     elif view == "Tail":
-        st.dataframe(raw.tail(rows), use_container_width=True)
+        st.dataframe(raw.tail(rows), width="stretch")
     elif view == "Random":
-        st.dataframe(raw.sample(n=rows), use_container_width=True)
+        st.dataframe(raw.sample(n=rows), width="stretch")
     
     st.caption(f"This RAW data frame has {raw.shape[0]} rows and {raw.shape[1]} columns.")
     
