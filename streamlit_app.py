@@ -184,10 +184,9 @@ We use that information to predict how late the train will depart.
 
 # Page 02: Data Visualization
 elif page == "02 Data Visualization":
-    st.image("02.jpg", width=1500)
-    st.subheader("1) Departure delay distribution")
     fig = plt.figure(figsize=(7, 4))
-    plt.hist(df["departure_delay_m"], bins=50)
+    plt.hist(df["departure_delay_m"], bins=50, range=(1, 20))
+    plt.xlim(1, 20)
     plt.xlabel("departure_delay_m (minutes)")
     plt.ylabel("count")
     st.pyplot(fig)
