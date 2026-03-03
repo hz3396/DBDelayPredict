@@ -189,7 +189,6 @@ We use that information to predict how late the train will depart.
     col1, col2, col3 = st.columns(3)
     col1.metric("Total rows (raw)", f"{len(raw):,}")
     col2.metric("Rows used (cleaned)", f"{len(df):,}")
-    col3.metric("Number of features", "8")
 
     # Missing values
     st.subheader("Missing Values (after cleaning)")
