@@ -183,8 +183,9 @@ We use that information to predict how late the train will depart.
     st.dataframe(df.isna().sum())
 
 
-
+elif page == "02 Data Visualization":
     st.image("02.jpg", width=1500)
+
 
     # Chart 1: Histogram of departure delays, filtered to 1 to 20 minutes
     st.subheader("1) Departure Delay Distribution")
