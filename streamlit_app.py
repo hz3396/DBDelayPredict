@@ -110,7 +110,6 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     text_cols = ["station", "state", "city", "info"]
     for c in text_cols:
         if c in df.columns:
-            # NOTE: 这里不要先 astype(str)，否则 NaN 会变成字符串 "nan"
             df[c] = df[c].fillna("").astype(str).str.strip()
 
     return df
@@ -118,20 +117,13 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 df = clean_data(raw)
 
-
-# =========================
 # Sidebar navigation
-# =========================
 st.sidebar.header("Controls")
 page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
 
-
-# =========================
 # Page 01: Introduction
-# =========================
-st.image("Weixin Image_2026-03-02_181855_878.jpg", width=1500)
-
 if page == "01 Introduction":
+    st.image("Weixin Image_2026-03-02_181855_878.jpg", width=1500)
     st.header("Project Overview")
     st.write(
         """
@@ -200,11 +192,9 @@ We use that information to predict how late the train will depart.
     st.subheader("Missing Values (after cleaning)")
     st.dataframe(df.isna().sum())
 
-
-# =========================
 # Page 02: Data Visualization
-# =========================
 elif page == "02 Data Visualization":
+    st.image("Weixin Image_2026-03-02_181855_878.jpg", width=1500)
     st.subheader("1) Departure delay distribution")
     fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_m"], bins=50)
