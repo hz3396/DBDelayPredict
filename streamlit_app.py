@@ -182,7 +182,7 @@ elif page == "02 Data Visualization":
 
     # Chart 1: Histogram of departure delays, filtered to 1 to 20 minutes
     st.subheader("1) Departure Delay Distribution")
-    st.markdown("This histogram shows how many trains fall into each delay range between 1 and 20 minutes. The x axis represents the delay in minutes, and the y axis shows the count of trains. You can see that most delayed trains only have a very short delay, and longer delays are much less common.")
+    st.markdown("This histogram shows trains delay range（how many) between 1 and 20 minutes. The x axis shows the delay in minutes and the y axis shows the count of trains. Most delayed trains only have a very short delay.")
     fig = plt.figure(figsize=(7, 4))
     plt.hist(df["departure_delay_time"], bins=50, range=(1, 20))
     plt.xlim(1, 20)
@@ -192,7 +192,7 @@ elif page == "02 Data Visualization":
 
     # Chart 2: Scatter plot comparing arrival delay and departure delay
     st.subheader("2) Arrival Delay vs Departure Delay")
-    st.markdown("Each dot represents a train. The x axis is the departure delay and the y axis is the arrival delay. If the dots form a line going upward, it means trains that leave late also tend to arrive late. You can clearly see a positive correlation here.")
+    st.markdown("Each dot represents a train, the x axis is the departure delay and the y axis is the arrival delay. Positive correlation here means trains that leave late also tend to arrive late too.")
     fig = plt.figure(figsize=(7, 5))
     delay_df = df[(df["arrival_delay_time"] > 0) & (df["departure_delay_time"] > 0)]
     sample_size = min(3000, len(delay_df))
@@ -204,7 +204,7 @@ elif page == "02 Data Visualization":
 
     # Chart 3: Pie chart showing the ratio of on time vs delayed departures
     st.subheader("3) On Time vs Delayed Departures")
-    st.markdown("This pie chart shows the percentage of trains that departed on time versus those that were delayed. The green portion is on time and the red portion is delayed. You can quickly tell that the vast majority of trains do depart on time.")
+    st.markdown("This pie chart shows the percentage of trains that departed on time versus those that were delayed. Majority of trains do depart on time.")
     on_time_count = (df["departure_delay_time"] == 0).sum()
     delay_count = (df["departure_delay_time"] > 0).sum()
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -213,7 +213,7 @@ elif page == "02 Data Visualization":
 
     # Chart 4: Bar chart ranking states by delay rate percentage
     st.subheader("4) Departure Delay Rate by State")
-    st.markdown("Each bar represents a German state, and the length shows its departure delay rate as a percentage. States at the top have the highest delay rates. This helps you compare which regions are more likely to experience train delays.")
+    st.markdown("Each bar represents a German state and the length shows its departure delay rate as a percentage. This barplot tells us which regions in German are more likely to experience train delays.")
     state_delay = df.groupby("state")["departure_delay_time"].apply(lambda x: (x > 0).mean() * 100).sort_values(ascending=False)
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_delay.values, y=state_delay.index, palette="Reds_r", ax=ax)
@@ -223,7 +223,7 @@ elif page == "02 Data Visualization":
 
     # Chart 5: Bar chart showing train volume per state
     st.subheader("5) Number of Trains by State")
-    st.markdown("This chart shows how many trains operate in each German state. States with longer bars have more train traffic. Keep in mind that states with higher train volume might naturally have more total delays simply because there are more trains running.")
+    st.markdown("This chart shows how many trains operate in each German state. * States with higher train volume might naturally have more total delays simply because there are more trains running.")
     state_counts = df["state"].value_counts()
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_counts.values, y=state_counts.index, palette="viridis", ax=ax)
@@ -233,7 +233,7 @@ elif page == "02 Data Visualization":
 
     # Chart 6: Scatter plot comparing planned dwell time and departure delay
     st.subheader("6) Planned Dwell Time vs Departure Delay")
-    st.markdown("Each dot represents a train. The x axis is the planned dwell time at the station and the y axis is the departure delay. This helps us see whether trains with shorter or longer planned stops tend to have more delays.")
+    st.markdown("The longer the Dwell time a train has less the chance it will have delay")
     fig = plt.figure(figsize=(7, 4))
     plt.scatter(df["planned_dwell_m"], df["departure_delay_time"], s=8, alpha=0.3)
     plt.xlabel("planned_dwell_m (minutes)")
@@ -242,7 +242,7 @@ elif page == "02 Data Visualization":
 
     # Chart 7: Correlation heatmap of all numeric variables
     st.subheader("7) Correlation Heatmap (Target + Features)")
-    st.markdown("This heatmap shows the correlation between all numeric variables. Values close to 1 or negative 1 mean a strong relationship, while values close to 0 mean almost no relationship. The color makes it easy to spot which variables are most related to each other.")
+    st.markdown(" ")
     fig = plt.figure(figsize=(8, 5))
     corr = df.select_dtypes(include="number").corr()
     sns.heatmap(corr, annot=True, fmt=".2f")
