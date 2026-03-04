@@ -126,12 +126,13 @@ if page == "01 Introduction":
     st.header("Project Overview")
     st.write(
         """
-This project predicts **departure_delay_time** (departure delay in minutes)
-using a Linear Regression model.
+Deutsche Bahn is a state-owned railway company in Germany, responsible for operating most of the trains within the country. Due to insufficient government investment, aging tracks, poor scheduling, and the sharing of tracks among different types of trains, the on-time performance of Deutsche Bahn trains has been far lower than that of other major railway companies in Europe recently, such as SNCF (France), SBB (Switzerland), NS (Netherlands), and SNCB (Belgium), etc.
 
-A train first arrives at a station and then departs.
-After arrival, we already know operational and time-related information.
-We use that information to predict how late the train will depart.
+We obtained all the train operation data from Deutsche Bahn company from July 2024 to July 2025 (approximately 1 million entries), and randomly selected 200,000 of them for analysis.
+
+When a train arrives at a certain station, we can obtain relevant operational and time-related information. Subsequently, we used this information to predict how late the train would depart from this station.
+
+This project will predict **departure_delay_time** (departure delay in minutes) using a Linear Regression model.
         """
     )
 
@@ -150,7 +151,7 @@ We use that information to predict how late the train will depart.
 
     st.caption(f"This RAW data frame has {raw.shape[0]} rows and {raw.shape[1]} columns.")
 
-    st.markdown("##### Missing values (raw data)")
+    st.markdown("##### Missing Values (Raw Data)")
     missing_nan = raw.isnull().sum()
 
     obj_cols = raw.select_dtypes(include="object").columns
@@ -163,7 +164,7 @@ We use that information to predict how late the train will depart.
     total_missing = int(missing_total.sum())
     missing_pct = (total_missing / total_cells) * 100
 
-    st.write("Missing values by column:")
+    st.write("Missing Values by Column:")
     st.dataframe(missing_nan)
 
     st.markdown("##### 📈 Summary Statistics")
@@ -173,7 +174,7 @@ We use that information to predict how late the train will depart.
     col1.metric("Total rows (raw)", f"{len(raw):,}")
     col2.metric("Rows used (cleaned)", f"{len(df):,}")
 
-    st.markdown("##### Missing values (After cleaning)")
+    st.markdown("##### Missing Values (After Cleaning)")
     st.dataframe(df.isna().sum())
 
 
