@@ -173,7 +173,7 @@ We use that information to predict how late the train will depart.
     col1.metric("Total rows (raw)", f"{len(raw):,}")
     col2.metric("Rows used (cleaned)", f"{len(df):,}")
 
-    st.write("Missing Values (after cleaning)")
+    st.markdown("##### Missing values (raw data)")
     st.dataframe(df.isna().sum())
 
 
