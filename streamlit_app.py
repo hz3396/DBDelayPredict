@@ -105,7 +105,7 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
     df = df[(df["station_category"] >= 1) & (df["station_category"] <= 7)]
     df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
-    df = df[(df["day_of_week"] >= 1) & (df["day_of_week"] <= 7)]
+    df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
 
     # Clean text columns
     text_cols = ["station", "state", "city", "info"]
