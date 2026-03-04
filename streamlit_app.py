@@ -31,6 +31,16 @@ raw = pd.read_csv(
     na_values=["None", "none", "NULL", "null", "NaN", "nan", ""],
 )
 
+# ✅ Rename columns (ONLY variable name changes)
+raw = raw.rename(
+    columns={
+        "arrival_delay_m": "arrival_delay_time",
+        "departure_delay_m": "departure_delay_time",
+        "arrival_delay_flag": "arrival_delay_severe_or_not",
+        "category": "station_category",
+    }
+)
+
 # Cleaning
 def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     raw2 = raw_df.copy()
@@ -48,19 +58,19 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
 
     # simple flags
     raw2["is_peak"] = raw2["hour"].isin([7, 8, 9, 16, 17, 18]).astype(int)
-    raw2["arrival_delay_flag"] = (raw2["arrival_delay_m"] > 6).astype(int)
+    raw2["arrival_delay_severe_or_not"] = (raw2["arrival_delay_time"] > 6).astype(int)
 
     # Keep target + future-use columns
     cols = [
-        "departure_delay_m",  # target
-        "arrival_delay_m",
+        "departure_delay_time",  # target
+        "arrival_delay_time",
         "planned_dwell_m",
-        "category",
+        "station_category",
         "hour",
         "line",
         "day_of_week",
         "is_peak",
-        "arrival_delay_flag",
+        "arrival_delay_severe_or_not",
         "station",
         "state",
         "city",
@@ -72,15 +82,15 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
 
     # Convert numeric columns
     numeric_cols = [
-        "departure_delay_m",
-        "arrival_delay_m",
+        "departure_delay_time",
+        "arrival_delay_time",
         "planned_dwell_m",
-        "category",
+        "station_category",
         "hour",
         "line",
         "day_of_week",
         "is_peak",
-        "arrival_delay_flag",
+        "arrival_delay_severe_or_not",
     ]
     numeric_cols = [c for c in numeric_cols if c in df.columns]
     for c in numeric_cols:
@@ -90,10 +100,10 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(subset=numeric_cols)
 
     # Basic filtering
-    df = df[(df["departure_delay_m"] >= 0) & (df["departure_delay_m"] <= 180)]
-    df = df[(df["arrival_delay_m"] >= 0) & (df["arrival_delay_m"] <= 180)]
+    df = df[(df["departure_delay_time"] >= 0) & (df["departure_delay_time"] <= 180)]
+    df = df[(df["arrival_delay_time"] >= 0) & (df["arrival_delay_time"] <= 180)]
     df = df[(df["planned_dwell_m"] >= 0) & (df["planned_dwell_m"] <= 60)]
-    df = df[(df["category"] >= 1) & (df["category"] <= 7)]
+    df = df[(df["station_category"] >= 1) & (df["station_category"] <= 7)]
     df = df[(df["hour"] >= 0) & (df["hour"] <= 23)]
     df = df[(df["day_of_week"] >= 0) & (df["day_of_week"] <= 6)]
 
@@ -116,7 +126,7 @@ if page == "01 Introduction":
     st.header("Project Overview")
     st.write(
         """
-This project predicts **departure_delay_m** (departure delay in minutes)
+This project predicts **departure_delay_time** (departure delay in minutes)
 using a Linear Regression model.
 
 A train first arrives at a station and then departs.
@@ -170,14 +180,13 @@ We use that information to predict how late the train will depart.
 elif page == "02 Data Visualization":
     st.image("02.jpg", width=1500)
 
-
     # Chart 1: Histogram of departure delays, filtered to 1 to 20 minutes
     st.subheader("1) Departure Delay Distribution")
     st.markdown("This histogram shows how many trains fall into each delay range between 1 and 20 minutes. The x axis represents the delay in minutes, and the y axis shows the count of trains. You can see that most delayed trains only have a very short delay, and longer delays are much less common.")
     fig = plt.figure(figsize=(7, 4))
-    plt.hist(df["departure_delay_m"], bins=50, range=(1, 20))
+    plt.hist(df["departure_delay_time"], bins=50, range=(1, 20))
     plt.xlim(1, 20)
-    plt.xlabel("departure_delay_m (minutes)")
+    plt.xlabel("departure_delay_time (minutes)")
     plt.ylabel("count")
     st.pyplot(fig)
 
@@ -185,10 +194,10 @@ elif page == "02 Data Visualization":
     st.subheader("2) Arrival Delay vs Departure Delay")
     st.markdown("Each dot represents a train. The x axis is the departure delay and the y axis is the arrival delay. If the dots form a line going upward, it means trains that leave late also tend to arrive late. You can clearly see a positive correlation here.")
     fig = plt.figure(figsize=(7, 5))
-    delay_df = df[(df["arrival_delay_m"] > 0) & (df["departure_delay_m"] > 0)]
+    delay_df = df[(df["arrival_delay_time"] > 0) & (df["departure_delay_time"] > 0)]
     sample_size = min(3000, len(delay_df))
     sample = delay_df.sample(sample_size, random_state=42)
-    plt.scatter(sample["departure_delay_m"], sample["arrival_delay_m"], alpha=0.3, s=10)
+    plt.scatter(sample["departure_delay_time"], sample["arrival_delay_time"], alpha=0.3, s=10)
     plt.xlabel("Departure Delay (min)")
     plt.ylabel("Arrival Delay (min)")
     st.pyplot(fig)
@@ -196,8 +205,8 @@ elif page == "02 Data Visualization":
     # Chart 3: Pie chart showing the ratio of on time vs delayed departures
     st.subheader("3) On Time vs Delayed Departures")
     st.markdown("This pie chart shows the percentage of trains that departed on time versus those that were delayed. The green portion is on time and the red portion is delayed. You can quickly tell that the vast majority of trains do depart on time.")
-    on_time_count = (df["departure_delay_m"] == 0).sum()
-    delay_count = (df["departure_delay_m"] > 0).sum()
+    on_time_count = (df["departure_delay_time"] == 0).sum()
+    delay_count = (df["departure_delay_time"] > 0).sum()
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.pie([on_time_count, delay_count], labels=["on_time", "delay"], autopct="%1.1f%%", colors=["#4CAF50", "#F44336"])
     st.pyplot(fig)
@@ -205,7 +214,7 @@ elif page == "02 Data Visualization":
     # Chart 4: Bar chart ranking states by delay rate percentage
     st.subheader("4) Departure Delay Rate by State")
     st.markdown("Each bar represents a German state, and the length shows its departure delay rate as a percentage. States at the top have the highest delay rates. This helps you compare which regions are more likely to experience train delays.")
-    state_delay = df.groupby("state")["departure_delay_m"].apply(lambda x: (x > 0).mean() * 100).sort_values(ascending=False)
+    state_delay = df.groupby("state")["departure_delay_time"].apply(lambda x: (x > 0).mean() * 100).sort_values(ascending=False)
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.barplot(x=state_delay.values, y=state_delay.index, palette="Reds_r", ax=ax)
     ax.set_xlabel("Delay Rate (%)")
@@ -226,9 +235,9 @@ elif page == "02 Data Visualization":
     st.subheader("6) Planned Dwell Time vs Departure Delay")
     st.markdown("Each dot represents a train. The x axis is the planned dwell time at the station and the y axis is the departure delay. This helps us see whether trains with shorter or longer planned stops tend to have more delays.")
     fig = plt.figure(figsize=(7, 4))
-    plt.scatter(df["planned_dwell_m"], df["departure_delay_m"], s=8, alpha=0.3)
+    plt.scatter(df["planned_dwell_m"], df["departure_delay_time"], s=8, alpha=0.3)
     plt.xlabel("planned_dwell_m (minutes)")
-    plt.ylabel("departure_delay_m (minutes)")
+    plt.ylabel("departure_delay_time (minutes)")
     st.pyplot(fig, use_container_width=False)
 
     # Chart 7: Correlation heatmap of all numeric variables
@@ -243,23 +252,23 @@ elif page == "02 Data Visualization":
 # =========================
 # Page 03: Prediction (Route 2, simplified & stable)
 # =========================
-# Page 03: Prediction
 else:
     st.subheader("Train Linear Regression Model")
     st.image("03.jpg", width=1500)
+
     feature_cols = [
-        "arrival_delay_m",
+        "arrival_delay_time",
         "planned_dwell_m",
-        "category",
+        "station_category",
         "hour",
         "line",
         "day_of_week",
         "is_peak",
-        "arrival_delay_flag",
+        "arrival_delay_severe_or_not",
     ]
 
     X = df[feature_cols]
-    y = df["departure_delay_m"]
+    y = df["departure_delay_time"]
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
@@ -302,7 +311,7 @@ else:
     mn = min(p_plot.min(), y_plot.min())
     mx = max(p_plot.max(), y_plot.max())
     plt.plot([mn, mx], [mn, mx], "r--", linewidth=3)
-    plt.title("Actual vs Predicted (departure_delay_m)")
+    plt.title("Actual vs Predicted (departure_delay_time)")
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     st.pyplot(fig)
@@ -314,17 +323,17 @@ else:
     with colT1:
         is_peak = int(st.toggle("Is Peak Hour?", key="inp_is_peak"))
     with colT2:
-        arrival_delay_flag = int(st.toggle("Arrival Delay Flag?", key="inp_arrival_delay_flag"))
-    
+        arrival_delay_severe_or_not = int(st.toggle("Arrival Delay Severe?", key="inp_arrival_delay_severe_or_not"))
+
     # Row 1
     col1, col2, col3 = st.columns(3)
     with col1:
-        arrival_delay = st.slider("arrival_delay_m (0-180)", 0.0, 180.0, 5.0, key="inp_arrival_delay")
+        arrival_delay_time = st.slider("arrival_delay_time (0-180)", 0.0, 180.0, 5.0, key="inp_arrival_delay_time")
     with col2:
         dwell = st.slider("planned_dwell_m (0-60)", 0.0, 60.0, 2.0, key="inp_dwell")
     with col3:
-        category = st.slider("category (1-7)", 1, 7, 3, key="inp_category")
-    
+        station_category = st.slider("station_category (1-7)", 1, 7, 3, key="inp_station_category")
+
     # Row 2
     col4, col5, col6 = st.columns(3)
     with col4:
@@ -333,21 +342,19 @@ else:
         day_of_week = st.slider("day_of_week (0=Mon ... 6=Sun)", 0, 6, 1, key="inp_day_of_week")
     with col6:
         line = st.slider("line", 0, 10, 0, key="inp_line")  # adjust to your true encoding
-    
+
     # Build input row with ALL features
     new_X = pd.DataFrame([{
-        "arrival_delay_m": arrival_delay,
+        "arrival_delay_time": arrival_delay_time,
         "planned_dwell_m": dwell,
-        "category": category,
+        "station_category": station_category,
         "hour": hour,
         "line": line,
         "day_of_week": day_of_week,
         "is_peak": is_peak,
-        "arrival_delay_flag": arrival_delay_flag,
+        "arrival_delay_severe_or_not": arrival_delay_severe_or_not,
     }])
-    
-    # IMPORTANT: enforce same column order as training
     new_X = new_X[feature_cols]
-    
+
     pred_one = model.predict(new_X)[0]
-    st.write(f"Predicted departure_delay_m: **{pred_one:.1f} minutes**")
+    st.write(f"Predicted departure_delay_time: **{pred_one:.1f} minutes**")
