@@ -262,6 +262,7 @@ elif page == "02 Data Visualization":
 # Page 03: Prediction
 else:
     st.subheader("Train Linear Regression model")
+    st.image("03.jpg", width=1500)
     feature_cols = [
         "arrival_delay_m",
         "planned_dwell_m",
