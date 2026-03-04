@@ -154,23 +154,8 @@ We use that information to predict how late the train will depart.
     total_missing = int(missing_total.sum())
     missing_pct = (total_missing / total_cells) * 100
 
-    st.write("NaN missing values by column:")
+    st.write("Missing values by column:")
     st.dataframe(missing_nan)
-
-    st.write("Blank-string missing values by column (text columns):")
-    st.dataframe(missing_blank[missing_blank > 0])
-
-    st.write("Total missing (NaN + blanks) by column:")
-    st.dataframe(missing_total[missing_total > 0])
-
-    st.markdown(f"**Percentage of total missing values (NaN + blanks):** {missing_pct:.1f} %")
-
-    if missing_pct < 1:
-        st.success("✅ Missing values are extremely low in the raw data.")
-    elif 1 <= missing_pct <= 5:
-        st.warning("⚠️ Some missing data exists in the raw dataset.")
-    else:
-        st.error("🚨 High percentage of missing data in the raw dataset.")
 
     st.markdown("##### 📈 Summary Statistics")
     st.dataframe(df.describe())
