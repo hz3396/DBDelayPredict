@@ -14,6 +14,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # App setup
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚆 Deutsche Bahn Train Departure Delay Predictor")
+st.write("""Haochen Zhang, William Zheng, Tianlai Zhang""")
 
 # Load data (GitHub Release)
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
