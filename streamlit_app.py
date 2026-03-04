@@ -108,7 +108,7 @@ def clean_data(raw_df: pd.DataFrame) -> pd.DataFrame:
 df = clean_data(raw)
 
 # Sidebar navigation
-page = st.sidebar.radio("Select Page", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
+page = st.sidebar.radio("**Page Selection**", ["01 Introduction", "02 Data Visualization", "03 Prediction"])
 
 # Page 01: Introduction
 if page == "01 Introduction":
