@@ -14,6 +14,31 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # App setup
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚆 Deutsche Bahn Train Departure Delay Predictor")
+st.markdown("""
+<style>
+
+.stApp {
+    background-color: #0e1117;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: white;
+}
+
+p, span, label, div {
+    color: #e6e6e6;
+}
+
+[data-testid="stMetricValue"] {
+    color: white;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #111;
+}
+
+</style>
+""", unsafe_allow_html=True)
 st.write("""Haochen Zhang, William Zheng, Tianlai Zhang""")
 
 # Load data (GitHub Release)
