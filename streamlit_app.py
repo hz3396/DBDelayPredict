@@ -6,6 +6,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+plt.style.use("dark_background")
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
@@ -16,25 +17,64 @@ st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚆 Deutsche Bahn Train Departure Delay Predictor")
 st.markdown("""
 <style>
-
 .stApp {
-    background-color: #0e1117;
+    background: linear-gradient(180deg, #0b0f1a 0%, #0e1117 100%);
 }
-
-h1, h2, h3, h4, h5, h6 {
+header {
+    background: transparent !important;
+}
+h1, h2, h3, h4 {
     color: white;
+    font-weight: 700;
 }
-
 p, span, label, div {
-    color: #e6e6e6;
+    color: #d1d5db;
+}
+[data-testid="stSidebar"] {
+    background: #0f172a;
 }
 
-[data-testid="stMetricValue"] {
+[data-testid="stSidebar"] * {
     color: white;
 }
+[data-testid="stDataFrame"] {
+    background: #111827;
+    border-radius: 10px;
+}
+[data-testid="stImage"],
+[data-testid="stPlotlyChart"],
+[data-testid="stTable"] {
+    background: #111827;
+    border-radius: 12px;
+    padding: 10px;
+}
+[data-testid="stMetric"] {
+    background: #111827;
+    padding: 15px;
+    border-radius: 10px;
+}
+[data-testid="stMetricValue"] {
+    color: #60a5fa;
+    font-weight: bold;
+}
+.stSlider {
+    color: white;
+}
+[data-testid="stDataFrame"] div {
+    color: white;
+}
+button[kind="secondary"] {
+    background: #1f2937;
+    border-radius: 8px;
+}
 
-[data-testid="stSidebar"] {
-    background-color: #111;
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 5px;
 }
 
 </style>
