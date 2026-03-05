@@ -426,6 +426,34 @@ elif page == "02 Data Visualization":
     ax.legend()
     st.pyplot(fig)
 
+    # Station Delay Lookup
+    st.subheader("🔍 Station Delay Lookup")
+    st.markdown("Select a station from the dropdown to see its delay statistics compared to the overall network average. You can also see how the average delay changes by hour for that specific station.")
+    if "station" in df.columns:
+        all_stations = sorted(df["station"].dropna().unique())
+        selected_station = st.selectbox("Select a station", all_stations)
+        sdf = df[df["station"] == selected_station]
+        if len(sdf) > 0:
+            s_avg = sdf["departure_delay_time"].mean()
+            s_rate = (sdf["departure_delay_time"] > 0).mean() * 100
+            overall_avg = df["departure_delay_time"].mean()
+            s_city = sdf["city"].iloc[0] if "city" in sdf.columns else "N/A"
+            s_state = sdf["state"].iloc[0] if "state" in sdf.columns else "N/A"
+            sc1, sc2, sc3, sc4 = st.columns(4)
+            sc1.metric("Avg Delay", f"{s_avg:.2f} min", f"{s_avg - overall_avg:+.2f} vs network avg")
+            sc2.metric("Delay Rate", f"{s_rate:.1f}%")
+            sc3.metric("Total Trains", f"{len(sdf):,}")
+            sc4.metric("City", s_city)
+            if len(sdf) >= 10:
+                hourly_s = sdf.groupby("hour")["departure_delay_time"].mean()
+                fig, ax = plt.subplots(figsize=(10, 3))
+                ax.fill_between(hourly_s.index, hourly_s.values, alpha=0.25, color=T["accent2"])
+                ax.plot(hourly_s.index, hourly_s.values, color=T["accent2"], linewidth=2, marker="o", markersize=4)
+                ax.set_xlabel("Hour of Day")
+                ax.set_ylabel("Avg Delay (min)")
+                ax.set_title(f"Delay by Hour — {selected_station}, {s_state}")
+                ax.set_xticks(range(0, 24))
+                st.pyplot(fig)
 
 # =========================
 # Page 03: Prediction (Route 2, simplified & stable)
@@ -552,30 +580,7 @@ else:
 
     st.markdown("---")
 
-    # Station Delay Lookup
-    st.subheader("🔍 Station Delay Lookup")
-    st.markdown("Select a station from the dropdown to see its delay statistics compared to the overall network average. You can also see how the average delay changes by hour for that specific station.")
-    if "station" in df.columns:
-        all_stations = sorted(df["station"].dropna().unique())
-        selected_station = st.selectbox("Select a station", all_stations)
-        sdf = df[df["station"] == selected_station]
-        if len(sdf) > 0:
-            s_avg = sdf["departure_delay_time"].mean()
-            s_rate = (sdf["departure_delay_time"] > 0).mean() * 100
-            overall_avg = df["departure_delay_time"].mean()
-            s_city = sdf["city"].iloc[0] if "city" in sdf.columns else "N/A"
-            s_state = sdf["state"].iloc[0] if "state" in sdf.columns else "N/A"
-            sc1, sc2, sc3, sc4 = st.columns(4)
-            sc1.metric("Avg Delay", f"{s_avg:.2f} min", f"{s_avg - overall_avg:+.2f} vs network avg")
-            sc2.metric("Delay Rate", f"{s_rate:.1f}%")
-            sc3.metric("Total Trains", f"{len(sdf):,}")
-            sc4.metric("City", s_city)
-            if len(sdf) >= 10:
-                hourly_s = sdf.groupby("hour")["departure_delay_time"].mean()
-                fig, ax = plt.subplots(figsize=(10, 3))
-                ax.fill_between(hourly_s.index, hourly_s.values, alpha=0.25, color=T["accent2"])
-                ax.plot(hourly_s.index, hourly_s.values, color=T["accent2"], linewidth=2, marker="o", markersize=4)
-                ax.set_xlabel("Hour of Day")
+ 
                 ax.set_ylabel("Avg Delay (min)")
                 ax.set_title(f"Delay by Hour — {selected_station}, {s_state}")
                 ax.set_xticks(range(0, 24))
