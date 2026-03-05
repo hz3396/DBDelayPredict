@@ -15,70 +15,61 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # App setup
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚄 DB Train Departure Delay Predictor")
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(180deg, #0b0f1a 0%, #0e1117 100%);
-}
-header {
-    background: transparent !important;
-}
-h1, h2, h3, h4 {
-    color: white;
-    font-weight: 700;
-}
-p, span, label, div {
-    color: #d1d5db;
-}
-[data-testid="stSidebar"] {
-    background: #0f172a;
-}
-
-[data-testid="stSidebar"] * {
-    color: white;
-}
-[data-testid="stDataFrame"] {
-    background: #111827;
-    border-radius: 10px;
-}
-[data-testid="stImage"],
-[data-testid="stPlotlyChart"],
-[data-testid="stTable"] {
-    background: #111827;
-    border-radius: 12px;
-    padding: 10px;
-}
-[data-testid="stMetric"] {
-    background: #111827;
-    padding: 15px;
-    border-radius: 10px;
-}
-[data-testid="stMetricValue"] {
-    color: #60a5fa;
-    font-weight: bold;
-}
-.stSlider {
-    color: white;
-}
-[data-testid="stDataFrame"] div {
-    color: white;
-}
-button[kind="secondary"] {
-    background: #1f2937;
-    border-radius: 8px;
-}
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 5px;
-}
-
-</style>
-""", unsafe_allow_html=True)
+# --- Dark style for Streamlit DataFrame / Tables (add once, near the top) ---
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: #0b0f14;
+        color: #e6edf3;
+    }
+    div[data-testid="stDataFrame"],
+    div[data-testid="stTable"]{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stDataFrame"] div[role="grid"],
+    div[data-testid="stTable"] table{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #2d333b !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stDataFrame"] div[role="columnheader"]{
+        background: #161b22 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #2d333b !important;
+    }
+    div[data-testid="stDataFrame"] div[role="gridcell"]{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #1f242b !important;
+    }
+    div[data-testid="stDataFrame"] div[role="row"]:hover div[role="gridcell"]{
+        background: #111823 !important;
+    }
+    div[data-testid="stTable"] thead tr th{
+        background: #161b22 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #2d333b !important;
+    }
+    div[data-testid="stTable"] tbody tr td{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #1f242b !important;
+    }
+    div[data-testid="stDataFrame"] input,
+    div[data-testid="stDataFrame"] textarea{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #2d333b !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.write("""Haochen Zhang, William Zheng, Tianlai Zhang""")
 
 # Load data (GitHub Release)
