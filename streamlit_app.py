@@ -14,7 +14,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 
 # App setup
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
-st.title("🚄Deutsche Bahn Train Departure Delay Predictor")
+st.title("🚄 DB Train Departure Delay Predictor")
 st.markdown("""
 <style>
 .stApp {
@@ -192,7 +192,7 @@ if page == "01 Introduction":
     st.header("Project Overview")
     st.write(
         """
-Deutsche Bahn is a state-owned railway company in Germany, responsible for operating most of the trains within the country. Due to insufficient government investment, aging infrastructure, poor scheduling, and the sharing of tracks among different types of trains, the on-time performance of Deutsche Bahn trains has been far lower than that of other major railway companies in Europe recently, such as SNCF (France), SBB (Switzerland), NS (Netherlands), and SNCB (Belgium), etc.
+Deutsche Bahn (DB) is a state-owned railway company in Germany, responsible for operating most of the trains within the country. Due to insufficient government investment, aging infrastructure, poor scheduling, and the sharing of tracks among different types of trains, the on-time performance of Deutsche Bahn trains has been far lower than that of other major railway companies in Europe recently, such as SNCF (France), SBB (Switzerland), NS (Netherlands), and SNCB (Belgium), etc.
 
 We obtained all the train operation data from Deutsche Bahn company from July 2024 to July 2025 (approximately 1 million entries), and randomly selected 200,000 of them for analysis.
 
