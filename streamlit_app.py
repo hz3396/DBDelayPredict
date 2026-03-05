@@ -426,8 +426,10 @@ elif page == "02 Data Visualization":
     ax.legend()
     st.pyplot(fig)
 
+    st.markdown("---")
+
     # Station Delay Lookup
-    st.subheader("🔍 Station Delay Lookup")
+    st.subheader("11) Station Delay Lookup")
     st.markdown("Select a station from the dropdown to see its delay statistics compared to the overall network average. You can also see how the average delay changes by hour for that specific station.")
     if "station" in df.columns:
         all_stations = sorted(df["station"].dropna().unique())
@@ -451,9 +453,10 @@ elif page == "02 Data Visualization":
                 ax.plot(hourly_s.index, hourly_s.values, color=T["accent2"], linewidth=2, marker="o", markersize=4)
                 ax.set_xlabel("Hour of Day")
                 ax.set_ylabel("Avg Delay (min)")
-                ax.set_title(f"Delay by Hour — {selected_station}, {s_state}")
+                ax.set_title(f"Delay by Hour at {selected_station}, {s_state}")
                 ax.set_xticks(range(0, 24))
                 st.pyplot(fig)
+
 
 # =========================
 # Page 03: Prediction (Route 2, simplified & stable)
@@ -577,11 +580,3 @@ else:
 
     pred_one = model.predict(new_X)[0]
     st.success(f"Predicted departure delay: **{pred_one:.1f} minutes**")
-
-    st.markdown("---")
-
- 
-                ax.set_ylabel("Avg Delay (min)")
-                ax.set_title(f"Delay by Hour — {selected_station}, {s_state}")
-                ax.set_xticks(range(0, 24))
-                st.pyplot(fig)
