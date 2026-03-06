@@ -332,8 +332,8 @@ elif page == "02 Data Visualization":
     st.markdown("---")
 
     # Chart 8: Delay Hotspot Map
-    st.subheader("8) Station Delay Hotspot Map")
-    st.markdown("Each dot is a station. Red = high average delay, green = mostly on time. The size of the dot also scales with delay severity. Hover over any dot to see the station name, city, state and average delay in minutes.")
+    st.subheader("8) Hotspot Map of Station Departure Delays")
+    st.markdown("Each dot represents a station. Red = high average delay, green = mostly on time.")
     if "lat" in df.columns and "long" in df.columns:
         station_map = df.dropna(subset=["lat", "long"]).groupby(
             ["station", "lat", "long", "city", "state"]
@@ -366,8 +366,8 @@ elif page == "02 Data Visualization":
         st.info("Location data not available in the cleaned dataset.")
 
     # Chart 9: Average delay by hour of day
-    st.subheader("9) Avg Delay by Hour of Day")
-    st.markdown("This line chart shows the average departure delay at each hour of the day. Delays are lowest around 4 to 5 AM when networks are quiet and peak around 5 to 6 PM during evening rush hour.")
+    st.subheader("9) Average Departure Delay by Hour of Day")
+    st.markdown("This line chart shows the average departure delay at each hour of the day. Delays are lowest around 4 to 5 AM and peak around 5 to 6 PM.")
     hourly = df.groupby("hour")["departure_delay_time"].mean()
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.fill_between(hourly.index, hourly.values, alpha=0.25, color=T["accent"])
@@ -378,8 +378,8 @@ elif page == "02 Data Visualization":
     st.pyplot(fig)
 
     # Chart 10: Average delay by day of week
-    st.subheader("10) Avg Delay by Day of Week")
-    st.markdown("Red bars are above the weekly average and green bars are below it. Weekend days tend to have fewer delays. ")
+    st.subheader("10) Average Departure Delay by Day of Week")
+    st.markdown("Weekend days tend to have fewer delays. ")
     day_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     day_delay = df.groupby("day_of_week")["departure_delay_time"].mean()
     avg_d = day_delay.mean()
@@ -397,7 +397,7 @@ elif page == "02 Data Visualization":
 
     # Station Delay Lookup
     st.subheader("11) Station Delay Lookup")
-    st.markdown("Select a station from the dropdown to see its delay statistics compared to the overall network average. You can also see how the average delay changes by hour for that specific station.")
+    st.markdown("Please select a station from the list to see its delay statistics compared to the overall network average.")
     if "station" in df.columns:
         all_stations = sorted(df["station"].dropna().unique())
         selected_station = st.selectbox("Select a station", all_stations)
@@ -424,9 +424,7 @@ elif page == "02 Data Visualization":
                 ax.set_xticks(range(0, 24))
                 st.pyplot(fig)
 
-# =========================
 # Page 03: Prediction (Route 2, simplified & stable)
-# =========================
 else:
     st.subheader("Train Linear Regression Model")
     try:
