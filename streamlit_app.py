@@ -17,7 +17,6 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # App setup
 st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚄 DB Train Departure Delay Predictor")
-st.write("Haochen Zhang, William Zheng, Tianlai Zhang")
 
 #Theme
 # Dark style
