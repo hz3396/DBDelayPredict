@@ -31,18 +31,6 @@ THEMES = {
         "bar_good": "#4ade80",
         "bar_bad": "#f87171",
         "map_style": "mapbox://styles/mapbox/dark-v10",
-    },
-    "Blue": {
-        "bg": "linear-gradient(160deg, #e0f2fe 0%, #f0f9ff 100%)",
-        "sidebar": "#bae6fd",
-        "card": "#e0f2fe",
-        "accent": "#0284c7",
-        "accent2": "#7c3aed",
-        "mpl": "seaborn-v0_8-whitegrid",
-        "bar_good": "#059669",
-        "bar_bad": "#dc2626",
-        "map_style": "mapbox://styles/mapbox/light-v10",
-    },
 }
 
 theme_name = st.sidebar.selectbox("Theme", list(THEMES.keys()), index=0)
