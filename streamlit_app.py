@@ -19,9 +19,9 @@ st.set_page_config(page_title="Deutsche Bahn Delay Project", layout="wide")
 st.title("🚄 DB Train Departure Delay Predictor")
 st.write("Haochen Zhang, William Zheng, Tianlai Zhang")
 
-# ── In-app Theme Switcher ──
+#Theme
 THEMES = {
-    "Midnight Blue": {
+    "Dark": {
         "bg": "linear-gradient(160deg, #0b0f1a 0%, #0e1117 100%)",
         "sidebar": "#0f172a",
         "card": "#111827",
@@ -32,40 +32,7 @@ THEMES = {
         "bar_bad": "#f87171",
         "map_style": "mapbox://styles/mapbox/dark-v10",
     },
-    "Cyberpunk": {
-        "bg": "linear-gradient(160deg, #0d0016 0%, #120024 100%)",
-        "sidebar": "#1a0033",
-        "card": "#1a0033",
-        "accent": "#e879f9",
-        "accent2": "#facc15",
-        "mpl": "dark_background",
-        "bar_good": "#34d399",
-        "bar_bad": "#e879f9",
-        "map_style": "mapbox://styles/mapbox/dark-v10",
-    },
-    "Deep Forest": {
-        "bg": "linear-gradient(160deg, #071a0e 0%, #0a1f12 100%)",
-        "sidebar": "#071a0e",
-        "card": "#0d2618",
-        "accent": "#4ade80",
-        "accent2": "#fbbf24",
-        "mpl": "dark_background",
-        "bar_good": "#86efac",
-        "bar_bad": "#f87171",
-        "map_style": "mapbox://styles/mapbox/dark-v10",
-    },
-    "Crimson Night": {
-        "bg": "linear-gradient(160deg, #1a0000 0%, #0f0000 100%)",
-        "sidebar": "#1c0707",
-        "card": "#1c0707",
-        "accent": "#f87171",
-        "accent2": "#fb923c",
-        "mpl": "dark_background",
-        "bar_good": "#fbbf24",
-        "bar_bad": "#ef4444",
-        "map_style": "mapbox://styles/mapbox/dark-v10",
-    },
-    "Arctic": {
+    "Blue": {
         "bg": "linear-gradient(160deg, #e0f2fe 0%, #f0f9ff 100%)",
         "sidebar": "#bae6fd",
         "card": "#e0f2fe",
