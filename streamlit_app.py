@@ -20,48 +20,60 @@ st.title("🚄 DB Train Departure Delay Predictor")
 st.write("Haochen Zhang, William Zheng, Tianlai Zhang")
 
 #Theme
-THEMES = {
-    "Dark": {
-        "bg": "linear-gradient(160deg, #0b0f1a 0%, #0e1117 100%)",
-        "sidebar": "#0f172a",
-        "card": "#111827",
-        "accent": "#60a5fa",
-        "accent2": "#f59e0b",
-        "mpl": "dark_background",
-        "bar_good": "#4ade80",
-        "bar_bad": "#f87171",
-        "map_style": "mapbox://styles/mapbox/dark-v10",
-}
-
-theme_name = st.sidebar.selectbox("Theme", list(THEMES.keys()), index=0)
-T = THEMES[theme_name]
-
-# Apply theme CSS
-text_color = "#1e293b" if theme_name == "Arctic" else "#d1d5db"
-st.markdown(f"""
-<style>
-.stApp {{
-    background: {T['bg']};
-}}
-header {{ background: transparent !important; }}
-h1, h2, h3, h4 {{ color: {T['accent']}; font-weight: 700; }}
-p, span, label, div {{ color: {text_color}; }}
-[data-testid="stSidebar"] {{ background: {T['sidebar']}; }}
-[data-testid="stSidebar"] * {{ color: {text_color}; }}
-[data-testid="stDataFrame"] {{ background: {T['card']}; border-radius: 10px; }}
-[data-testid="stMetric"] {{ background: {T['card']}; padding: 15px; border-radius: 10px; }}
-[data-testid="stMetricValue"] {{ color: {T['accent']}; font-weight: bold; }}
-[data-testid="stDataFrame"] div {{ color: {text_color}; }}
-::-webkit-scrollbar {{ width: 8px; }}
-::-webkit-scrollbar-thumb {{ background: {T['accent']}44; border-radius: 5px; }}
-</style>
-""", unsafe_allow_html=True)
-
-# Set matplotlib style based on theme
-try:
-    plt.style.use(T["mpl"])
-except Exception:
-    plt.style.use("dark_background")
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: #0b0f14;
+        color: #e6edf3;
+    }
+    div[data-testid="stDataFrame"],
+    div[data-testid="stTable"]{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stDataFrame"] div[role="grid"],
+    div[data-testid="stTable"] table{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #2d333b !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stDataFrame"] div[role="columnheader"]{
+        background: #161b22 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #2d333b !important;
+    }
+    div[data-testid="stDataFrame"] div[role="gridcell"]{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #1f242b !important;
+    }
+    div[data-testid="stDataFrame"] div[role="row"]:hover div[role="gridcell"]{
+        background: #111823 !important;
+    }
+    div[data-testid="stTable"] thead tr th{
+        background: #161b22 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #2d333b !important;
+    }
+    div[data-testid="stTable"] tbody tr td{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border-bottom: 1px solid #1f242b !important;
+    }
+    div[data-testid="stDataFrame"] input,
+    div[data-testid="stDataFrame"] textarea{
+        background: #0b0f14 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #2d333b !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Load data (GitHub Release)
 DATA_URL = "https://github.com/hz3396/DBDelayPredict/releases/download/v1.0/db_sample.csv"
