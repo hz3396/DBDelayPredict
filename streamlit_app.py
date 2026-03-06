@@ -386,7 +386,7 @@ elif page == "02 Data Visualization":
     ax.axhline(avg_d, color=T["accent"], linestyle="--", alpha=0.7, linewidth=1.2, label=f"Weekly avg: {avg_d:.2f} min")
     ax.set_xticks(range(7))
     ax.set_xticklabels(day_labels)
-    ax.set_ylabel("Avg Departure Delay (min)")
+    ax.set_ylabel("Average Departure Delay (min)")
     ax.legend()
     st.pyplot(fig)
 
