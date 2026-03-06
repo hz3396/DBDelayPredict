@@ -289,7 +289,7 @@ elif page == "02 Data Visualization":
     delay_df = df[(df["arrival_delay_time"] > 0) & (df["departure_delay_time"] > 0)]
     sample_size = min(3000, len(delay_df))
     sample = delay_df.sample(sample_size, random_state=42)
-    plt.scatter(sample["departure_delay_time"], sample["arrival_delay_time"], alpha=0.3, s=10, color=T["accent"])
+    plt.scatter(sample["departure_delay_time"], sample["arrival_delay_time"], alpha=0.3, s=10, color=["accent"])
     plt.xlabel("Departure Delay (min)")
     plt.ylabel("Arrival Delay (min)")
     st.pyplot(fig)
