@@ -197,7 +197,7 @@ if page == "01 Introduction":
         """
 Deutsche Bahn (DB) is a state-owned railway company in Germany, responsible for operating most of the trains within the country. Due to insufficient government investment, aging infrastructure, poor scheduling, and the sharing of tracks among different types of trains, the on-time performance of Deutsche Bahn trains has been far lower than that of other major railway companies in Europe recently, such as SNCF (France), SBB (Switzerland), NS (Netherlands), and SNCB (Belgium), etc.
 
-We obtained all the train operation data from the Deutsche Bahn company from July 2024 to July 2025 (approximately 1 million entries), and randomly selected 200,000 of them for analysis.
+We obtained all the train operation data from the Deutsche Bahn company from July 8, 2024 to July 14, 2024 (approximately 1 million entries), and randomly selected 200,000 of them for analysis.
 
 When a train arrives at a certain station, we can obtain relevant operational and time-related information. Subsequently, we used this information to predict how late the train would depart from this station.
 
