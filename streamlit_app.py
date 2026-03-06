@@ -414,7 +414,7 @@ elif page == "02 Data Visualization":
                 ax.fill_between(hourly_s.index, hourly_s.values, alpha=0.25, color=T["accent2"])
                 ax.plot(hourly_s.index, hourly_s.values, color=T["accent2"], linewidth=2, marker="o", markersize=4)
                 ax.set_xlabel("Hour of Day")
-                ax.set_ylabel("Avg Delay (min)")
+                ax.set_ylabel("Average Departure Delay (min)")
                 ax.set_title(f"Delay by Hour at {selected_station}, {s_state}")
                 ax.set_xticks(range(0, 24))
                 st.pyplot(fig)
